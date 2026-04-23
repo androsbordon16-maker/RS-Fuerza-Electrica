@@ -30,7 +30,6 @@ export default function Usuarios() {
       email_confirm: true
     })
     if (error) {
-      // Fallback: sign up normally
       const { error: e2 } = await supabase.auth.signUp({
         email: form.email, password: form.password,
         options: { data: { nombre: form.nombre, rol: form.rol } }
@@ -48,6 +47,12 @@ export default function Usuarios() {
     cargar()
   }
 
+  async function eliminarUsuario(u) {
+    if (!confirm(`¿Eliminar a ${u.nombre}? Esta acción no se puede deshacer.`)) return
+    await supabase.from('usuarios').delete().eq('id', u.id)
+    cargar()
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
@@ -58,7 +63,6 @@ export default function Usuarios() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Crear usuario */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="text-sm font-semibold text-gray-800 mb-4">Agregar técnico</h2>
           <form onSubmit={crearUsuario} className="space-y-3">
@@ -80,7 +84,6 @@ export default function Usuarios() {
           </form>
         </div>
 
-        {/* Lista usuarios */}
         <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
           {usuarios.map(u => (
             <div key={u.id} className="flex items-center justify-between px-4 py-3">
@@ -88,10 +91,16 @@ export default function Usuarios() {
                 <p className="text-sm font-medium text-gray-900">{u.nombre}</p>
                 <p className="text-xs text-gray-500">{u.email} · {u.rol}</p>
               </div>
-              <button onClick={()=>toggleActivo(u)}
-                className={`text-xs px-3 py-1 rounded-full font-medium ${u.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                {u.activo ? 'Activo' : 'Inactivo'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={()=>toggleActivo(u)}
+                  className={`text-xs px-3 py-1 rounded-full font-medium ${u.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {u.activo ? 'Activo' : 'Inactivo'}
+                </button>
+                <button onClick={()=>eliminarUsuario(u)}
+                  className="text-xs px-3 py-1 rounded-full font-medium bg-red-100 text-red-600 hover:bg-red-200">
+                  Eliminar
+                </button>
+              </div>
             </div>
           ))}
         </div>
