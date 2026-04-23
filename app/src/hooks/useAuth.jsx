@@ -1,49 +1,24 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 
-const AuthContext = createContext({})
-
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [perfil, setPerfil] = useState(null)
-  const [loading, setLoading] = useState(true)
+export default function Login() {
+  const { login, user } = useAuth()
+  const nav = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) cargarPerfil(session.user.id)
-      else setLoading(false)
-    })
+    if (user) nav('/', { replace: true })
+  }, [user])
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) cargarPerfil(session.user.id)
-      else { setPerfil(null); setLoading(false) }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function cargarPerfil(uid) {
-    const { data } = await supabase.from('usuarios').select('*').eq('id', uid).single()
-    setPerfil(data)
+  async function handleLogin(e) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { error } = await login(email, password)
+    if (error) setError('Correo o contraseña incorrectos')
     setLoading(false)
   }
-
-  async function login(email, password) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error }
-  }
-
-  async function logout() {
-    await supabase.auth.signOut()
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, perfil, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export const useAuth = () => useContext(AuthContext)
