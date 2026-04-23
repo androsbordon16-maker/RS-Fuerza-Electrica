@@ -25,25 +25,11 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function cargarPerfil(uid) {
-    let data = null
-    for (let i = 0; i < 3; i++) {
-      const { data: d } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', uid)
-        .single()
-      if (d) { data = d; break }
-      await new Promise(r => setTimeout(r, 500))
-    }
-    if (!data) {
-      const { data: { user } } = await supabase.auth.getUser()
-      const { data: newProfile } = await supabase
-        .from('usuarios')
-        .upsert({ id: uid, nombre: user?.email?.split('@')[0] || 'Usuario', email: user?.email, rol: 'tecnico' })
-        .select()
-        .single()
-      data = newProfile
-    }
+    const { data } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', uid)
+      .single()
     setPerfil(data)
     setLoading(false)
   }
