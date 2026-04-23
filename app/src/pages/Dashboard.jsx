@@ -17,7 +17,7 @@ const ESTADO_LABEL = {
 }
 
 export default function Dashboard() {
-  const { perfil, logout } = useAuth()
+  const { perfil, logout, user } = useAuth()
   const nav = useNavigate()
   const [reportes, setReportes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -28,6 +28,7 @@ export default function Dashboard() {
 
   async function cargarReportes() {
     let q = supabase.from('reportes').select('*, usuarios(nombre)').order('created_at', { ascending: false })
+    if (perfil?.rol !== 'admin') q = q.eq('tecnico_id', user?.id)
     const { data } = await q
     setReportes(data || [])
     setLoading(false)
