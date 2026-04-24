@@ -266,7 +266,7 @@ export default function ReporteForm() {
     setFotosExistentes(p => p.filter(x => x.id !== fotoId))
   }
 
-  function FotoSection({ secNombre, maxFotos=99 }) {
+  function FotoSection({ secNombre, maxFotos=99, titulo="" }) {
     const fileRef = useRef()
     const camaraRef = useRef()
     const existing = fotosExistentes.filter(f => f.seccion === secNombre)
@@ -281,7 +281,7 @@ export default function ReporteForm() {
 
     return (
       <div className="mt-4">
-        <p className="text-xs font-medium text-gray-500 mb-2">📷 FOTOS{maxFotos < 99 ? ` (máx. ${maxFotos})` : ''}</p>
+        <p className="text-xs font-medium text-gray-500 mb-2">📷 {titulo || secNombre}{maxFotos < 99 ? ` (máx. ${maxFotos})` : ''}</p>
         <div className="flex flex-wrap gap-2">
           {existing.map(f => (
             <div key={f.id} className="relative group">
@@ -382,7 +382,11 @@ export default function ReporteForm() {
     <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">Esta sección es principalmente fotográfica. Sube las fotos de distribución y rectificadores.</div>
       <Campo label="Notas"><textarea className={inp} rows={3} value={datos.notas_dist||''} onChange={e=>updDatos('notas_dist',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <FotoSection secNombre="Dist. y Rect." />
+      <div className="mt-4 space-y-4">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Fotografías por zona</p>
+        <FotoSection secNombre="Distribución DC" maxFotos={3} titulo="Distribución DC" />
+        <FotoSection secNombre="Rectificadores" maxFotos={3} titulo="Rectificadores" />
+      </div>
     </div>,
 
     <div className="space-y-4">
@@ -408,7 +412,11 @@ export default function ReporteForm() {
         </div>
       ))}
       {puedeEditar && <button onClick={()=>addArr('tableros_ac',{calibre:'',cables:'',apr1:'OK',apr2:'OK',apr3:'OK',if1:'',if2:'',if3:'',vf12:'',vf13:'',vf23:''})} className="text-sm text-blue-600 hover:underline">+ Agregar tablero #2</button>}
-      <FotoSection secNombre="Tablero AC" />
+      <div className="mt-4 space-y-4">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Fotografías por zona</p>
+        <FotoSection secNombre="Tablero rectificadores" maxFotos={3} titulo="Tablero de rectificadores" />
+        <FotoSection secNombre="Barra de tierras" maxFotos={2} titulo="Barra de tierras" />
+      </div>
     </div>,
 
     <div className="space-y-4">
@@ -433,7 +441,11 @@ export default function ReporteForm() {
         <Campo label="Eficiencia (%)"><input className={inp} type="number" value={datos.bat_efic} onChange={e=>updDatos('bat_efic',e.target.value)} disabled={!puedeEditar} /></Campo>
       </div>
       <Campo label="Notas bancos"><textarea className={inp} rows={3} value={datos.notas_bancos} onChange={e=>updDatos('notas_bancos',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <FotoSection secNombre="Bancos" />
+      <div className="mt-4 space-y-4">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Fotografías por zona</p>
+        <FotoSection secNombre="Gabinete rack" maxFotos={1} titulo="Gabinete / rack" />
+        <FotoSection secNombre="Cables baterías" maxFotos={3} titulo="Cables y baterías" />
+      </div>
     </div>,
 
     <div className="space-y-4">
@@ -452,7 +464,12 @@ export default function ReporteForm() {
       </div>
       <Campo label="Alarmas presentes"><input className={inp} value={datos.tb_alarmas} onChange={e=>updDatos('tb_alarmas',e.target.value)} disabled={!puedeEditar} /></Campo>
       <Campo label="Notas"><textarea className={inp} rows={2} value={datos.tb_notas} onChange={e=>updDatos('tb_notas',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <FotoSection secNombre="Temp Baterías" />
+      <div className="mt-4 space-y-4">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
+        <FotoSection secNombre="Temp Bat Superior" maxFotos={2} titulo="Termografía superior" />
+        <FotoSection secNombre="Temp Bat Inferior" maxFotos={2} titulo="Termografía inferior" />
+        <FotoSection secNombre="Temp Bat Extra" maxFotos={2} titulo="Termografía extra" />
+      </div>
     </div>,
 
     <div className="space-y-4">
@@ -471,7 +488,12 @@ export default function ReporteForm() {
       </div>
       <Campo label="Alarmas presentes"><input className={inp} value={datos.td_alarmas} onChange={e=>updDatos('td_alarmas',e.target.value)} disabled={!puedeEditar} /></Campo>
       <Campo label="Notas"><textarea className={inp} rows={2} value={datos.td_notas} onChange={e=>updDatos('td_notas',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <FotoSection secNombre="Temp Distribución" />
+      <div className="mt-4 space-y-4">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
+        <FotoSection secNombre="Temp Dist Superior" maxFotos={2} titulo="Termografía superior" />
+        <FotoSection secNombre="Temp Dist Inferior" maxFotos={2} titulo="Termografía inferior" />
+        <FotoSection secNombre="Temp Dist Extra" maxFotos={2} titulo="Termografía extra" />
+      </div>
     </div>,
 
     <div className="space-y-4">
@@ -497,13 +519,23 @@ export default function ReporteForm() {
       <Campo label="Aspirado y limpieza"><input className={inp} value={datos.tr_limpieza} onChange={e=>updDatos('tr_limpieza',e.target.value)} disabled={!puedeEditar} /></Campo>
       <Campo label="Alarmas presentes"><input className={inp} value={datos.tr_alarmas} onChange={e=>updDatos('tr_alarmas',e.target.value)} disabled={!puedeEditar} /></Campo>
       <Campo label="Notas"><textarea className={inp} rows={2} value={datos.tr_notas} onChange={e=>updDatos('tr_notas',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <FotoSection secNombre="Temp Rectificadores" />
+      <div className="mt-4 space-y-4">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
+        <FotoSection secNombre="Temp Rect Izq" maxFotos={2} titulo="Termografía izquierda" />
+        <FotoSection secNombre="Temp Rect Der" maxFotos={2} titulo="Termografía derecha" />
+        <FotoSection secNombre="Temp Rect Extra" maxFotos={1} titulo="Termografía extra" />
+      </div>
     </div>,
 
     <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">Esta sección es principalmente fotográfica. Sube las fotos de temperaturas del tablero AC.</div>
       <Campo label="Notas"><textarea className={inp} rows={3} value={datos.notas_temp_tablero||''} onChange={e=>updDatos('notas_temp_tablero',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <FotoSection secNombre="Temp Tablero AC" />
+      <div className="mt-4 space-y-4">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
+        <FotoSection secNombre="Temp Tab Superior" maxFotos={2} titulo="Termografía superior" />
+        <FotoSection secNombre="Temp Tab Inferior" maxFotos={2} titulo="Termografía inferior" />
+        <FotoSection secNombre="Temp Tab Extra" maxFotos={2} titulo="Termografía extra" />
+      </div>
     </div>,
   ]
 
