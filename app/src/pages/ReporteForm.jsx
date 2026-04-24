@@ -570,7 +570,7 @@ export default function ReporteForm() {
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
         <FotoSection secNombre="Temp Rect Izq" maxFotos={2} titulo="Termografía izquierda" />
         <FotoSection secNombre="Temp Rect Der" maxFotos={2} titulo="Termografía derecha" />
-        <FotoSection secNombre="Temp Rect Extra" maxFotos={1} titulo="Termografía extra" />
+        <FotoSection secNombre="Temp Rect Extra" maxFotos={2} titulo="Termografía extra" />
       </div>
     </div>,
 
