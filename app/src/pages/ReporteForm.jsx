@@ -199,7 +199,8 @@ export default function ReporteForm() {
       for (let i = 0; i < archivos.length; i++) {
         const f = archivos[i]
         const ext = f.name.split('.').pop()
-        const path = `${rid}/${sec.replace(/\s/g,'_')}/${Date.now()}_${i}.${ext}`
+        const secLimpio = sec.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s/g,'_').replace(/[^a-zA-Z0-9_.-]/g,'')
+        const path = `${rid}/${secLimpio}/${Date.now()}_${i}.${ext}`
         const { data: up } = await supabase.storage.from('fotos-reportes').upload(path, f, { upsert: true })
         if (up) {
           const { data: { publicUrl } } = supabase.storage.from('fotos-reportes').getPublicUrl(path)
