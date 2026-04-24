@@ -69,13 +69,13 @@ function ProgresoBarra({ enc, datos, seccionActual, onClickSeccion }) {
   function seccionLlena(i) {
     if (i === 0) return enc.codigo_rs && enc.fecha_servicio && enc.planta && enc.sitio && enc.ciudad
     if (i === 1) return datos.modelo && datos.serie && datos.rect_total && datos.carga
-    if (i === 2) return true // Solo fotos
+    if (i === 2) return true
     if (i === 3) return datos.tableros_ac[0]?.if1
     if (i === 4) return datos.rack && datos.bancos_inst
     if (i === 5) return datos.gabinetes[0]?.tierra
     if (i === 6) return datos.distribuciones[0]?.estado
     if (i === 7) return datos.shefts_izq[0]?.estado
-    if (i === 8) return true // Solo fotos
+    if (i === 8) return true
     return false
   }
   const completadas = SECCIONES.filter((_,i) => seccionLlena(i)).length
@@ -132,9 +132,7 @@ export default function ReporteForm() {
   // Autoguardado cada 2 minutos
   useEffect(() => {
     if (esNuevo || !reporteId || !puedeEditar) return
-    const interval = setInterval(() => {
-      autoguardar()
-    }, 120000)
+    const interval = setInterval(() => { autoguardar() }, 120000)
     return () => clearInterval(interval)
   }, [reporteId, enc, datos])
 
@@ -169,7 +167,6 @@ export default function ReporteForm() {
 
   async function guardar(nuevoEstado, comentario) {
     setGuardando(true)
-    // FIX: nunca sobreescribir el tecnico_id original
     const payload = {
       codigo_rs: enc.codigo_rs, numero_ventana: enc.numero_ventana,
       fecha_servicio: enc.fecha_servicio, planta: enc.planta,
@@ -194,22 +191,41 @@ export default function ReporteForm() {
       accion, detalle: { estado: nuevoEstado || estado, comentario: comentario || null }
     })
 
-    // Subir fotos
+    // Subir fotos — con log de error para diagnóstico
     for (const [sec, archivos] of Object.entries(fotos)) {
       for (let i = 0; i < archivos.length; i++) {
         const f = archivos[i]
         const ext = f.name.split('.').pop()
-        const secLimpio = sec.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s/g,'_').replace(/[^a-zA-Z0-9_.-]/g,'')
+        const secLimpio = sec
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s/g, '_')
+          .replace(/[^a-zA-Z0-9_.-]/g, '')
         const path = `${rid}/${secLimpio}/${Date.now()}_${i}.${ext}`
-        const { data: up } = await supabase.storage.from('fotos-reportes').upload(path, f, { upsert: true })
+
+        // LOG: ver el path exacto y cualquier error
+        console.log('📸 Intentando subir:', path)
+        const { data: up, error: upErr } = await supabase.storage
+          .from('fotos-reportes')
+          .upload(path, f, { upsert: true })
+
+        if (upErr) {
+          console.error('❌ Error al subir foto:', upErr.message, '| Path:', path)
+          continue // salta a la siguiente foto sin romper todo
+        }
+
+        console.log('✅ Foto subida:', path)
         if (up) {
           const { data: { publicUrl } } = supabase.storage.from('fotos-reportes').getPublicUrl(path)
-          await supabase.from('fotos').insert({ reporte_id: rid, seccion: sec, url: publicUrl, nombre_archivo: f.name, orden: i })
+          await supabase.from('fotos').insert({
+            reporte_id: rid, seccion: sec, url: publicUrl,
+            nombre_archivo: f.name, orden: i
+          })
         }
       }
     }
+
     setFotos({})
-    // Recargar fotos existentes
     const { data: fsActualizadas } = await supabase.from('fotos').select('*').eq('reporte_id', rid).order('orden')
     setFotosExistentes(fsActualizadas || [])
     if (nuevoEstado) setEstado(nuevoEstado)
@@ -218,7 +234,6 @@ export default function ReporteForm() {
     setGuardando(false)
     if (esNuevo && rid) nav(`/reporte/${rid}`, { replace: true })
   }
-
 
   async function generarExcel() {
     setGenerando(true)
@@ -259,6 +274,12 @@ export default function ReporteForm() {
     }).eq('id', reporteId)
     setAutoguardando(false)
   }
+
+  // ── NUEVO: autoguardado al salir de cualquier campo (blur) ──
+  const autoguardarBlur = useCallback(() => {
+    if (!reporteId || !puedeEditar) return
+    autoguardar()
+  }, [reporteId, puedeEditar, enc, datos])
 
   async function eliminarFotoExistente(fotoId, url) {
     await supabase.from('fotos').delete().eq('id', fotoId)
@@ -318,36 +339,55 @@ export default function ReporteForm() {
   }
 
   const secciones = [
+    // ── 0: Encabezado ──
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <Campo label="Código RS-"><input className={inp} value={enc.codigo_rs} onChange={e=>setEnc(p=>({...p,codigo_rs:e.target.value}))} placeholder="174" disabled={!puedeEditar} /></Campo>
-        <Campo label="Número de ventana"><input className={inp} value={enc.numero_ventana} onChange={e=>setEnc(p=>({...p,numero_ventana:e.target.value}))} placeholder="595314" disabled={!puedeEditar} /></Campo>
+        <Campo label="Código RS-">
+          <input className={inp} value={enc.codigo_rs}
+            onChange={e=>setEnc(p=>({...p,codigo_rs:e.target.value}))}
+            onBlur={autoguardarBlur}
+            placeholder="174" disabled={!puedeEditar} />
+        </Campo>
+        <Campo label="Número de ventana">
+          <input className={inp} value={enc.numero_ventana}
+            onChange={e=>setEnc(p=>({...p,numero_ventana:e.target.value}))}
+            onBlur={autoguardarBlur}
+            placeholder="595314" disabled={!puedeEditar} />
+        </Campo>
       </div>
       <Campo label="Fecha del servicio">
-        <input type="date" className={inp} disabled={!puedeEditar} onChange={e=>setEnc(p=>({...p,fecha_servicio:formatearFecha(e.target.value)}))} />
+        <input type="date" className={inp} disabled={!puedeEditar}
+          onChange={e=>setEnc(p=>({...p,fecha_servicio:formatearFecha(e.target.value)}))}
+          onBlur={autoguardarBlur} />
         {enc.fecha_servicio && <p className="text-xs text-blue-600 mt-1 font-medium">→ {enc.fecha_servicio}</p>}
       </Campo>
       <ComboField label="Planta" options={PLANTAS} value={enc.planta} onChange={v=>setEnc(p=>({...p,planta:v}))} placeholder='PLANTA ALPHA "A"' disabled={!puedeEditar} />
-      <Campo label="Sitio"><input className={inp} value={enc.sitio} onChange={e=>setEnc(p=>({...p,sitio:e.target.value}))} placeholder="CTC CUERNAVACA." disabled={!puedeEditar} /></Campo>
+      <Campo label="Sitio">
+        <input className={inp} value={enc.sitio}
+          onChange={e=>setEnc(p=>({...p,sitio:e.target.value}))}
+          onBlur={autoguardarBlur}
+          placeholder="CTC CUERNAVACA." disabled={!puedeEditar} />
+      </Campo>
       <ComboField label="Ciudad" options={CIUDADES} value={enc.ciudad} onChange={v=>setEnc(p=>({...p,ciudad:v}))} placeholder="CUERNAVACA, MORELOS." disabled={!puedeEditar} />
     </div>,
 
+    // ── 1: Planta DC ──
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <Campo label="Modelo"><input className={inp} value={datos.modelo} onChange={e=>updDatos('modelo',e.target.value)} placeholder="CXPS-W(2000)" disabled={!puedeEditar} /></Campo>
-        <Campo label="Número de serie"><input className={inp} value={datos.serie} onChange={e=>updDatos('serie',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Total rectificadores"><input className={inp} type="number" value={datos.rect_total} onChange={e=>updDatos('rect_total',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Rectificadores instalados"><input className={inp} type="number" value={datos.rect_inst} onChange={e=>updDatos('rect_inst',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Capacidad rectificador (W)"><input className={inp} type="number" value={datos.cap_rect} onChange={e=>updDatos('cap_rect',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Carga actual (A)"><input className={inp} type="number" value={datos.carga} onChange={e=>updDatos('carga',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Voltaje operación"><input className={inp} type="number" value={datos.volt_op} onChange={e=>updDatos('volt_op',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Voltaje igualación"><input className={inp} type="number" value={datos.volt_ig} onChange={e=>updDatos('volt_ig',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Alarmas presentes"><input className={inp} value={datos.alarmas_dc} onChange={e=>updDatos('alarmas_dc',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Calibre positivo"><input className={inp} value={datos.cal_pos} onChange={e=>updDatos('cal_pos',e.target.value)} placeholder="4/0" disabled={!puedeEditar} /></Campo>
-        <Campo label="Calibre tierra física"><input className={inp} value={datos.cal_tierra} onChange={e=>updDatos('cal_tierra',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Calibre barra delta"><input className={inp} value={datos.cal_barra} onChange={e=>updDatos('cal_barra',e.target.value)} placeholder="1/0" disabled={!puedeEditar} /></Campo>
+        <Campo label="Modelo"><input className={inp} value={datos.modelo} onChange={e=>updDatos('modelo',e.target.value)} onBlur={autoguardarBlur} placeholder="CXPS-W(2000)" disabled={!puedeEditar} /></Campo>
+        <Campo label="Número de serie"><input className={inp} value={datos.serie} onChange={e=>updDatos('serie',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Total rectificadores"><input className={inp} type="number" value={datos.rect_total} onChange={e=>updDatos('rect_total',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Rectificadores instalados"><input className={inp} type="number" value={datos.rect_inst} onChange={e=>updDatos('rect_inst',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Capacidad rectificador (W)"><input className={inp} type="number" value={datos.cap_rect} onChange={e=>updDatos('cap_rect',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Carga actual (A)"><input className={inp} type="number" value={datos.carga} onChange={e=>updDatos('carga',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Voltaje operación"><input className={inp} type="number" value={datos.volt_op} onChange={e=>updDatos('volt_op',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Voltaje igualación"><input className={inp} type="number" value={datos.volt_ig} onChange={e=>updDatos('volt_ig',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Alarmas presentes"><input className={inp} value={datos.alarmas_dc} onChange={e=>updDatos('alarmas_dc',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Calibre positivo"><input className={inp} value={datos.cal_pos} onChange={e=>updDatos('cal_pos',e.target.value)} onBlur={autoguardarBlur} placeholder="4/0" disabled={!puedeEditar} /></Campo>
+        <Campo label="Calibre tierra física"><input className={inp} value={datos.cal_tierra} onChange={e=>updDatos('cal_tierra',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Calibre barra delta"><input className={inp} value={datos.cal_barra} onChange={e=>updDatos('cal_barra',e.target.value)} onBlur={autoguardarBlur} placeholder="1/0" disabled={!puedeEditar} /></Campo>
       </div>
-      <Campo label="Nota especial (A32)"><input className={inp} value={datos.nota_especial} onChange={e=>updDatos('nota_especial',e.target.value)} placeholder="SOLO TIENE CABLEADOS PARA X RECTIFICADORES..." disabled={!puedeEditar} /></Campo>
+      <Campo label="Nota especial (A32)"><input className={inp} value={datos.nota_especial} onChange={e=>updDatos('nota_especial',e.target.value)} onBlur={autoguardarBlur} placeholder="SOLO TIENE CABLEADOS PARA X RECTIFICADORES..." disabled={!puedeEditar} /></Campo>
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-medium text-gray-500">REAPRIETE — RECUADROS AZULES</p>
@@ -359,16 +399,16 @@ export default function ReporteForm() {
             <tbody>
               {datos.rect_rows.map((row,i) => (
                 <tr key={i}>
-                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-16 focus:outline-none" value={row.al} onChange={e=>updArr('rect_rows',i,'al',e.target.value)} disabled={!puedeEditar} /></td>
-                  <td className="pr-1 pb-1"><input type="number" className="border border-gray-300 rounded px-1.5 py-1 text-xs w-14 focus:outline-none" value={row.tl} onChange={e=>updArr('rect_rows',i,'tl',e.target.value)} disabled={!puedeEditar} /></td>
-                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-12 focus:outline-none" value={row.el} onChange={e=>updArr('rect_rows',i,'el',e.target.value)} disabled={!puedeEditar} /></td>
-                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">RECT.=</span><input className="border-0 bg-transparent text-xs w-10 focus:outline-none text-blue-900 font-medium" value={row.rect_izq||''} onChange={e=>updArr('rect_rows',i,'rect_izq',e.target.value)} placeholder="1-2" disabled={!puedeEditar} /></div></td>
-                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">AMP=</span><input className="border-0 bg-transparent text-xs w-12 focus:outline-none text-blue-900 font-medium" value={row.amp_izq||''} onChange={e=>updArr('rect_rows',i,'amp_izq',e.target.value)} placeholder="2X40" disabled={!puedeEditar} /></div></td>
-                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">RECT.=</span><input className="border-0 bg-transparent text-xs w-10 focus:outline-none text-blue-900 font-medium" value={row.rect_der||''} onChange={e=>updArr('rect_rows',i,'rect_der',e.target.value)} placeholder="3-4" disabled={!puedeEditar} /></div></td>
-                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">AMP=</span><input className="border-0 bg-transparent text-xs w-12 focus:outline-none text-blue-900 font-medium" value={row.amp_der||''} onChange={e=>updArr('rect_rows',i,'amp_der',e.target.value)} placeholder="2X40" disabled={!puedeEditar} /></div></td>
-                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-16 focus:outline-none" value={row.ar} onChange={e=>updArr('rect_rows',i,'ar',e.target.value)} disabled={!puedeEditar} /></td>
-                  <td className="pr-1 pb-1"><input type="number" className="border border-gray-300 rounded px-1.5 py-1 text-xs w-14 focus:outline-none" value={row.tr} onChange={e=>updArr('rect_rows',i,'tr',e.target.value)} disabled={!puedeEditar} /></td>
-                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-12 focus:outline-none" value={row.er} onChange={e=>updArr('rect_rows',i,'er',e.target.value)} disabled={!puedeEditar} /></td>
+                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-16 focus:outline-none" value={row.al} onChange={e=>updArr('rect_rows',i,'al',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
+                  <td className="pr-1 pb-1"><input type="number" className="border border-gray-300 rounded px-1.5 py-1 text-xs w-14 focus:outline-none" value={row.tl} onChange={e=>updArr('rect_rows',i,'tl',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
+                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-12 focus:outline-none" value={row.el} onChange={e=>updArr('rect_rows',i,'el',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
+                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">RECT.=</span><input className="border-0 bg-transparent text-xs w-10 focus:outline-none text-blue-900 font-medium" value={row.rect_izq||''} onChange={e=>updArr('rect_rows',i,'rect_izq',e.target.value)} onBlur={autoguardarBlur} placeholder="1-2" disabled={!puedeEditar} /></div></td>
+                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">AMP=</span><input className="border-0 bg-transparent text-xs w-12 focus:outline-none text-blue-900 font-medium" value={row.amp_izq||''} onChange={e=>updArr('rect_rows',i,'amp_izq',e.target.value)} onBlur={autoguardarBlur} placeholder="2X40" disabled={!puedeEditar} /></div></td>
+                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">RECT.=</span><input className="border-0 bg-transparent text-xs w-10 focus:outline-none text-blue-900 font-medium" value={row.rect_der||''} onChange={e=>updArr('rect_rows',i,'rect_der',e.target.value)} onBlur={autoguardarBlur} placeholder="3-4" disabled={!puedeEditar} /></div></td>
+                  <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">AMP=</span><input className="border-0 bg-transparent text-xs w-12 focus:outline-none text-blue-900 font-medium" value={row.amp_der||''} onChange={e=>updArr('rect_rows',i,'amp_der',e.target.value)} onBlur={autoguardarBlur} placeholder="2X40" disabled={!puedeEditar} /></div></td>
+                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-16 focus:outline-none" value={row.ar} onChange={e=>updArr('rect_rows',i,'ar',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
+                  <td className="pr-1 pb-1"><input type="number" className="border border-gray-300 rounded px-1.5 py-1 text-xs w-14 focus:outline-none" value={row.tr} onChange={e=>updArr('rect_rows',i,'tr',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
+                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-12 focus:outline-none" value={row.er} onChange={e=>updArr('rect_rows',i,'er',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
                   {puedeEditar && <td><button onClick={()=>delArr('rect_rows',i)} className="text-red-400 hover:text-red-600 px-1">×</button></td>}
                 </tr>
               ))}
@@ -376,13 +416,14 @@ export default function ReporteForm() {
           </table>
         </div>
       </div>
-      <Campo label="Notas DC"><textarea className={inp} rows={2} value={datos.notas_dc} onChange={e=>updDatos('notas_dc',e.target.value)} disabled={!puedeEditar} /></Campo>
+      <Campo label="Notas DC"><textarea className={inp} rows={2} value={datos.notas_dc} onChange={e=>updDatos('notas_dc',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       <FotoSection secNombre="Planta DC" maxFotos={1} />
     </div>,
 
+    // ── 2: Dist. y Rect. ──
     <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">Esta sección es principalmente fotográfica. Sube las fotos de distribución y rectificadores.</div>
-      <Campo label="Notas"><textarea className={inp} rows={3} value={datos.notas_dist||''} onChange={e=>updDatos('notas_dist',e.target.value)} disabled={!puedeEditar} /></Campo>
+      <Campo label="Notas"><textarea className={inp} rows={3} value={datos.notas_dist||''} onChange={e=>updDatos('notas_dist',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       <div className="mt-4 space-y-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Fotografías por zona</p>
         <FotoSection secNombre="Distribución DC" maxFotos={3} titulo="Distribución DC" />
@@ -390,6 +431,7 @@ export default function ReporteForm() {
       </div>
     </div>,
 
+    // ── 3: Tablero AC ──
     <div className="space-y-4">
       {datos.tableros_ac.map((t,i) => (
         <div key={i} className="border border-gray-200 rounded-xl p-4">
@@ -398,17 +440,17 @@ export default function ReporteForm() {
             {datos.tableros_ac.length > 1 && puedeEditar && <button onClick={()=>delArr('tableros_ac',i)} className="text-xs text-red-500 hover:underline">Eliminar</button>}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Campo label="Calibre cable (AWG)"><input className={inp} value={t.calibre} onChange={e=>updArr('tableros_ac',i,'calibre',e.target.value)} placeholder="3/0" disabled={!puedeEditar} /></Campo>
-            <Campo label="Cables por polo"><input className={inp} type="number" value={t.cables} onChange={e=>updArr('tableros_ac',i,'cables',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Apriete fase 1"><input className={inp} value={t.apr1} onChange={e=>updArr('tableros_ac',i,'apr1',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Apriete fase 2"><input className={inp} value={t.apr2} onChange={e=>updArr('tableros_ac',i,'apr2',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Apriete fase 3"><input className={inp} value={t.apr3} onChange={e=>updArr('tableros_ac',i,'apr3',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Corriente fase 1 (A)"><input className={inp} type="number" value={t.if1} onChange={e=>updArr('tableros_ac',i,'if1',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Corriente fase 2 (A)"><input className={inp} type="number" value={t.if2} onChange={e=>updArr('tableros_ac',i,'if2',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Corriente fase 3 (A)"><input className={inp} type="number" value={t.if3} onChange={e=>updArr('tableros_ac',i,'if3',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Voltaje FASE 1-2 (V)"><input className={inp} type="number" value={t.vf12} onChange={e=>updArr('tableros_ac',i,'vf12',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Voltaje FASE 1-3 (V)"><input className={inp} type="number" value={t.vf13} onChange={e=>updArr('tableros_ac',i,'vf13',e.target.value)} disabled={!puedeEditar} /></Campo>
-            <Campo label="Voltaje FASE 2-3 (V)"><input className={inp} type="number" value={t.vf23} onChange={e=>updArr('tableros_ac',i,'vf23',e.target.value)} disabled={!puedeEditar} /></Campo>
+            <Campo label="Calibre cable (AWG)"><input className={inp} value={t.calibre} onChange={e=>updArr('tableros_ac',i,'calibre',e.target.value)} onBlur={autoguardarBlur} placeholder="3/0" disabled={!puedeEditar} /></Campo>
+            <Campo label="Cables por polo"><input className={inp} type="number" value={t.cables} onChange={e=>updArr('tableros_ac',i,'cables',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Apriete fase 1"><input className={inp} value={t.apr1} onChange={e=>updArr('tableros_ac',i,'apr1',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Apriete fase 2"><input className={inp} value={t.apr2} onChange={e=>updArr('tableros_ac',i,'apr2',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Apriete fase 3"><input className={inp} value={t.apr3} onChange={e=>updArr('tableros_ac',i,'apr3',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Corriente fase 1 (A)"><input className={inp} type="number" value={t.if1} onChange={e=>updArr('tableros_ac',i,'if1',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Corriente fase 2 (A)"><input className={inp} type="number" value={t.if2} onChange={e=>updArr('tableros_ac',i,'if2',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Corriente fase 3 (A)"><input className={inp} type="number" value={t.if3} onChange={e=>updArr('tableros_ac',i,'if3',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Voltaje FASE 1-2 (V)"><input className={inp} type="number" value={t.vf12} onChange={e=>updArr('tableros_ac',i,'vf12',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Voltaje FASE 1-3 (V)"><input className={inp} type="number" value={t.vf13} onChange={e=>updArr('tableros_ac',i,'vf13',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+            <Campo label="Voltaje FASE 2-3 (V)"><input className={inp} type="number" value={t.vf23} onChange={e=>updArr('tableros_ac',i,'vf23',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
           </div>
         </div>
       ))}
@@ -420,28 +462,29 @@ export default function ReporteForm() {
       </div>
     </div>,
 
+    // ── 4: Bancos ──
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <Campo label="Rack/Gabinete"><input className={inp} value={datos.rack} onChange={e=>updDatos('rack',e.target.value)} placeholder="2 GAB. CON 10 NIVELES" disabled={!puedeEditar} /></Campo>
+        <Campo label="Rack/Gabinete"><input className={inp} value={datos.rack} onChange={e=>updDatos('rack',e.target.value)} onBlur={autoguardarBlur} placeholder="2 GAB. CON 10 NIVELES" disabled={!puedeEditar} /></Campo>
         <ComboField label="Modelo" options={MARCAS_BATERIA} value={datos.bat_modelo} onChange={v=>updDatos('bat_modelo',v)} placeholder="HUAWEI" disabled={!puedeEditar} />
         <Campo label="Litio / Plomo"><select className={sel} value={datos.bat_tipo} onChange={e=>updDatos('bat_tipo',e.target.value)} disabled={!puedeEditar}><option>LITIO</option><option>PLOMO</option></select></Campo>
-        <Campo label="Gabinetes instalados"><input className={inp} type="number" value={datos.gab_inst} onChange={e=>updDatos('gab_inst',e.target.value)} disabled={!puedeEditar} /></Campo>
+        <Campo label="Gabinetes instalados"><input className={inp} type="number" value={datos.gab_inst} onChange={e=>updDatos('gab_inst',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
         <ComboField label="Marca" options={MARCAS_BATERIA} value={datos.bat_marca} onChange={v=>updDatos('bat_marca',v)} placeholder="HUAWEI" disabled={!puedeEditar} />
-        <Campo label="Año fabricación"><input className={inp} value={datos.bat_año} onChange={e=>updDatos('bat_año',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Capacidad bancos x rack"><input className={inp} type="number" value={datos.cap_banco} onChange={e=>updDatos('cap_banco',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Cantidad breakers"><input className={inp} type="number" value={datos.cant_break} onChange={e=>updDatos('cant_break',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Capacidad breaker (A)"><input className={inp} value={datos.cap_break} onChange={e=>updDatos('cap_break',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Bancos instalados"><input className={inp} type="number" value={datos.bancos_inst} onChange={e=>updDatos('bancos_inst',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Capacidad banco (A/H)"><input className={inp} type="number" value={datos.cap_banco_ah} onChange={e=>updDatos('cap_banco_ah',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Cables por polo"><input className={inp} type="number" value={datos.bat_cables} onChange={e=>updDatos('bat_cables',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Calibre cable"><input className={inp} value={datos.bat_calibre} onChange={e=>updDatos('bat_calibre',e.target.value)} placeholder="500 MCM" disabled={!puedeEditar} /></Campo>
-        <Campo label="Voltaje batería (VDC)"><input className={inp} type="number" value={datos.bat_volt} onChange={e=>updDatos('bat_volt',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Breaker/fusible valor"><input className={inp} value={datos.bat_break_val} onChange={e=>updDatos('bat_break_val',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Tierra física calibre"><input className={inp} value={datos.bat_tierra} onChange={e=>updDatos('bat_tierra',e.target.value)} placeholder="2 AWG" disabled={!puedeEditar} /></Campo>
-        <Campo label="Cable alarma breaker"><input className={inp} value={datos.bat_alarma} onChange={e=>updDatos('bat_alarma',e.target.value)} disabled={!puedeEditar} /></Campo>
-        <Campo label="Eficiencia (%)"><input className={inp} type="number" value={datos.bat_efic} onChange={e=>updDatos('bat_efic',e.target.value)} disabled={!puedeEditar} /></Campo>
+        <Campo label="Año fabricación"><input className={inp} value={datos.bat_año} onChange={e=>updDatos('bat_año',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Capacidad bancos x rack"><input className={inp} type="number" value={datos.cap_banco} onChange={e=>updDatos('cap_banco',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Cantidad breakers"><input className={inp} type="number" value={datos.cant_break} onChange={e=>updDatos('cant_break',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Capacidad breaker (A)"><input className={inp} value={datos.cap_break} onChange={e=>updDatos('cap_break',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Bancos instalados"><input className={inp} type="number" value={datos.bancos_inst} onChange={e=>updDatos('bancos_inst',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Capacidad banco (A/H)"><input className={inp} type="number" value={datos.cap_banco_ah} onChange={e=>updDatos('cap_banco_ah',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Cables por polo"><input className={inp} type="number" value={datos.bat_cables} onChange={e=>updDatos('bat_cables',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Calibre cable"><input className={inp} value={datos.bat_calibre} onChange={e=>updDatos('bat_calibre',e.target.value)} onBlur={autoguardarBlur} placeholder="500 MCM" disabled={!puedeEditar} /></Campo>
+        <Campo label="Voltaje batería (VDC)"><input className={inp} type="number" value={datos.bat_volt} onChange={e=>updDatos('bat_volt',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Breaker/fusible valor"><input className={inp} value={datos.bat_break_val} onChange={e=>updDatos('bat_break_val',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Tierra física calibre"><input className={inp} value={datos.bat_tierra} onChange={e=>updDatos('bat_tierra',e.target.value)} onBlur={autoguardarBlur} placeholder="2 AWG" disabled={!puedeEditar} /></Campo>
+        <Campo label="Cable alarma breaker"><input className={inp} value={datos.bat_alarma} onChange={e=>updDatos('bat_alarma',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        <Campo label="Eficiencia (%)"><input className={inp} type="number" value={datos.bat_efic} onChange={e=>updDatos('bat_efic',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       </div>
-      <Campo label="Notas bancos"><textarea className={inp} rows={3} value={datos.notas_bancos} onChange={e=>updDatos('notas_bancos',e.target.value)} disabled={!puedeEditar} /></Campo>
+      <Campo label="Notas bancos"><textarea className={inp} rows={3} value={datos.notas_bancos} onChange={e=>updDatos('notas_bancos',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       <div className="mt-4 space-y-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Fotografías por zona</p>
         <FotoSection secNombre="Gabinete rack" maxFotos={1} titulo="Gabinete / rack" />
@@ -449,6 +492,7 @@ export default function ReporteForm() {
       </div>
     </div>,
 
+    // ── 5: Temp. Baterías ──
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -457,14 +501,14 @@ export default function ReporteForm() {
         </div>
         {datos.gabinetes.map((g,i) => (
           <div key={i} className="flex gap-2 items-center mb-2">
-            <input className={inp} value={g.nombre} onChange={e=>updArr('gabinetes',i,'nombre',e.target.value)} disabled={!puedeEditar} />
-            <input className={inp} value={g.tierra} onChange={e=>updArr('gabinetes',i,'tierra',e.target.value)} placeholder="OK CAL 2 AWG" disabled={!puedeEditar} />
+            <input className={inp} value={g.nombre} onChange={e=>updArr('gabinetes',i,'nombre',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} />
+            <input className={inp} value={g.tierra} onChange={e=>updArr('gabinetes',i,'tierra',e.target.value)} onBlur={autoguardarBlur} placeholder="OK CAL 2 AWG" disabled={!puedeEditar} />
             {datos.gabinetes.length > 1 && puedeEditar && <button onClick={()=>delArr('gabinetes',i)} className="text-red-400">×</button>}
           </div>
         ))}
       </div>
-      <Campo label="Alarmas presentes"><input className={inp} value={datos.tb_alarmas} onChange={e=>updDatos('tb_alarmas',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <Campo label="Notas"><textarea className={inp} rows={2} value={datos.tb_notas} onChange={e=>updDatos('tb_notas',e.target.value)} disabled={!puedeEditar} /></Campo>
+      <Campo label="Alarmas presentes"><input className={inp} value={datos.tb_alarmas} onChange={e=>updDatos('tb_alarmas',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+      <Campo label="Notas"><textarea className={inp} rows={2} value={datos.tb_notas} onChange={e=>updDatos('tb_notas',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       <div className="mt-4 space-y-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
         <FotoSection secNombre="Temp Bat Superior" maxFotos={2} titulo="Termografía superior" />
@@ -473,6 +517,7 @@ export default function ReporteForm() {
       </div>
     </div>,
 
+    // ── 6: Temp. Distribución ──
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -481,14 +526,14 @@ export default function ReporteForm() {
         </div>
         {datos.distribuciones.map((d,i) => (
           <div key={i} className="flex gap-2 items-center mb-2">
-            <input className={inp} value={d.nombre} onChange={e=>updArr('distribuciones',i,'nombre',e.target.value)} disabled={!puedeEditar} />
-            <input className={inp} value={d.estado} onChange={e=>updArr('distribuciones',i,'estado',e.target.value)} placeholder="ACTIVADA" disabled={!puedeEditar} />
+            <input className={inp} value={d.nombre} onChange={e=>updArr('distribuciones',i,'nombre',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} />
+            <input className={inp} value={d.estado} onChange={e=>updArr('distribuciones',i,'estado',e.target.value)} onBlur={autoguardarBlur} placeholder="ACTIVADA" disabled={!puedeEditar} />
             {datos.distribuciones.length > 1 && puedeEditar && <button onClick={()=>delArr('distribuciones',i)} className="text-red-400">×</button>}
           </div>
         ))}
       </div>
-      <Campo label="Alarmas presentes"><input className={inp} value={datos.td_alarmas} onChange={e=>updDatos('td_alarmas',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <Campo label="Notas"><textarea className={inp} rows={2} value={datos.td_notas} onChange={e=>updDatos('td_notas',e.target.value)} disabled={!puedeEditar} /></Campo>
+      <Campo label="Alarmas presentes"><input className={inp} value={datos.td_alarmas} onChange={e=>updDatos('td_alarmas',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+      <Campo label="Notas"><textarea className={inp} rows={2} value={datos.td_notas} onChange={e=>updDatos('td_notas',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       <div className="mt-4 space-y-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
         <FotoSection secNombre="Temp Dist Superior" maxFotos={2} titulo="Termografía superior" />
@@ -497,6 +542,7 @@ export default function ReporteForm() {
       </div>
     </div>,
 
+    // ── 7: Temp. Rectificadores ──
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         {[['shefts_izq','LADO IZQUIERDO'],['shefts_der','LADO DERECHO']].map(([key,label]) => (
@@ -507,7 +553,7 @@ export default function ReporteForm() {
             </div>
             {datos[key].map((s,i) => (
               <div key={i} className="flex gap-2 items-center mb-2">
-                <input className={inp} value={s.nombre} onChange={e=>updArr(key,i,'nombre',e.target.value)} disabled={!puedeEditar} />
+                <input className={inp} value={s.nombre} onChange={e=>updArr(key,i,'nombre',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} />
                 <select className={sel} value={s.estado} onChange={e=>updArr(key,i,'estado',e.target.value)} disabled={!puedeEditar}>
                   <option>OK</option><option>FALLA</option><option value="">N/A</option>
                 </select>
@@ -517,9 +563,9 @@ export default function ReporteForm() {
           </div>
         ))}
       </div>
-      <Campo label="Aspirado y limpieza"><input className={inp} value={datos.tr_limpieza} onChange={e=>updDatos('tr_limpieza',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <Campo label="Alarmas presentes"><input className={inp} value={datos.tr_alarmas} onChange={e=>updDatos('tr_alarmas',e.target.value)} disabled={!puedeEditar} /></Campo>
-      <Campo label="Notas"><textarea className={inp} rows={2} value={datos.tr_notas} onChange={e=>updDatos('tr_notas',e.target.value)} disabled={!puedeEditar} /></Campo>
+      <Campo label="Aspirado y limpieza"><input className={inp} value={datos.tr_limpieza} onChange={e=>updDatos('tr_limpieza',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+      <Campo label="Alarmas presentes"><input className={inp} value={datos.tr_alarmas} onChange={e=>updDatos('tr_alarmas',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+      <Campo label="Notas"><textarea className={inp} rows={2} value={datos.tr_notas} onChange={e=>updDatos('tr_notas',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       <div className="mt-4 space-y-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
         <FotoSection secNombre="Temp Rect Izq" maxFotos={2} titulo="Termografía izquierda" />
@@ -528,9 +574,10 @@ export default function ReporteForm() {
       </div>
     </div>,
 
+    // ── 8: Temp. Tablero AC ──
     <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">Esta sección es principalmente fotográfica. Sube las fotos de temperaturas del tablero AC.</div>
-      <Campo label="Notas"><textarea className={inp} rows={3} value={datos.notas_temp_tablero||''} onChange={e=>updDatos('notas_temp_tablero',e.target.value)} disabled={!puedeEditar} /></Campo>
+      <Campo label="Notas"><textarea className={inp} rows={3} value={datos.notas_temp_tablero||''} onChange={e=>updDatos('notas_temp_tablero',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
       <div className="mt-4 space-y-4">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Termografías</p>
         <FotoSection secNombre="Temp Tab Superior" maxFotos={2} titulo="Termografía superior" />
@@ -574,19 +621,15 @@ export default function ReporteForm() {
         <div className="flex items-center gap-2 flex-wrap justify-end">
           {msg && <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-lg">{msg}</span>}
           {puedeEditar && <button onClick={()=>guardar()} disabled={guardando} className="text-sm text-blue-600 hover:underline disabled:opacity-50">{guardando?'Guardando...':'Guardar'}</button>}
-          {/* Técnico — borrador */}
           {!esNuevo && esPropio && estado === 'borrador' && (
             <button onClick={()=>guardar('en_revision')} className="bg-yellow-500 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-yellow-600">Enviar a revisión</button>
           )}
-          {/* Técnico — cancelar revisión */}
           {!esNuevo && esPropio && estado === 'en_revision' && (
             <button onClick={()=>guardar('borrador')} className="bg-gray-500 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-gray-600">Cancelar revisión</button>
           )}
-          {/* Técnico — rechazado, reenviar */}
           {!esNuevo && esPropio && estado === 'rechazado' && (
             <button onClick={()=>guardar('en_revision')} className="bg-orange-500 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-orange-600">Reenviar a revisión</button>
           )}
-          {/* Admin — cambiar estado */}
           {!esNuevo && perfil?.rol === 'admin' && (
             <div className="flex gap-1">
               {estado !== 'aprobado' && <button onClick={()=>guardar('aprobado')} className="bg-green-500 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-green-600">✓ Aprobar</button>}
