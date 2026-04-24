@@ -125,6 +125,7 @@ export default function ReporteForm() {
   const [tecnicoId, setTecnicoId] = useState(null)
   const [showRechazoModal, setShowRechazoModal] = useState(false)
   const [motivoRechazo, setMotivoRechazo] = useState('')
+  const [generando, setGenerando] = useState(false)
 
   useEffect(() => { if (!esNuevo) cargarReporte() }, [id])
 
@@ -212,6 +213,35 @@ export default function ReporteForm() {
     setTimeout(() => setMsg(''), 3000)
     setGuardando(false)
     if (esNuevo && rid) nav(`/reporte/${rid}`, { replace: true })
+  }
+
+
+  async function generarExcel() {
+    setGenerando(true)
+    try {
+      const { data: fs } = await supabase.from('fotos').select('*').eq('reporte_id', id)
+      const fotosPorSeccion = {}
+      ;(fs || []).forEach(f => {
+        if (!fotosPorSeccion[f.seccion]) fotosPorSeccion[f.seccion] = []
+        fotosPorSeccion[f.seccion].push(f.url)
+      })
+      const resp = await fetch('https://rs-fuerza-electrica-production.up.railway.app/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ encabezado: enc, datos, fotos: fotosPorSeccion })
+      })
+      if (!resp.ok) throw new Error('Error del servidor')
+      const blob = await resp.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `RS-${enc.codigo_rs}_${enc.planta}_${enc.fecha_servicio}.xlsx`.replace(/\s/g,'_')
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch(e) {
+      alert('Error al generar Excel: ' + e.message)
+    }
+    setGenerando(false)
   }
 
   async function autoguardar() {
@@ -529,7 +559,7 @@ export default function ReporteForm() {
             </div>
           )}
           {!esNuevo && (
-            <button onClick={()=>nav(`/reporte/${id}/excel`)} className="bg-blue-600 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-blue-700">⬇ Excel</button>
+            <button onClick={generarExcel} disabled={generando} className="bg-blue-600 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-blue-700 disabled:opacity-50">{generando?'Generando...':'⬇ Excel'}</button>
           )}
         </div>
       </div>
