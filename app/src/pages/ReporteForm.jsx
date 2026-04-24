@@ -208,6 +208,9 @@ export default function ReporteForm() {
       }
     }
     setFotos({})
+    // Recargar fotos existentes
+    const { data: fsActualizadas } = await supabase.from('fotos').select('*').eq('reporte_id', rid).order('orden')
+    setFotosExistentes(fsActualizadas || [])
     if (nuevoEstado) setEstado(nuevoEstado)
     setMsg('Guardado ✓')
     setTimeout(() => setMsg(''), 3000)
