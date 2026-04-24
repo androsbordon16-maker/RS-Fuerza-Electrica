@@ -64,7 +64,6 @@ function ComboField({label, options, value, onChange, placeholder='', disabled=f
   )
 }
 
-// Progreso por sección
 function ProgresoBarra({ enc, datos, seccionActual, onClickSeccion }) {
   function seccionLlena(i) {
     if (i === 0) return enc.codigo_rs && enc.fecha_servicio && enc.planta && enc.sitio && enc.ciudad
@@ -129,7 +128,6 @@ export default function ReporteForm() {
 
   useEffect(() => { if (!esNuevo) cargarReporte() }, [id])
 
-  // Autoguardado cada 2 minutos
   useEffect(() => {
     if (esNuevo || !reporteId || !puedeEditar) return
     const interval = setInterval(() => { autoguardar() }, 120000)
@@ -191,7 +189,6 @@ export default function ReporteForm() {
       accion, detalle: { estado: nuevoEstado || estado, comentario: comentario || null }
     })
 
-    // Subir fotos — con log de error para diagnóstico
     for (const [sec, archivos] of Object.entries(fotos)) {
       for (let i = 0; i < archivos.length; i++) {
         const f = archivos[i]
@@ -202,25 +199,15 @@ export default function ReporteForm() {
           .replace(/\s/g, '_')
           .replace(/[^a-zA-Z0-9_.-]/g, '')
         const path = `${rid}/${secLimpio}/${Date.now()}_${i}.${ext}`
-
-        // LOG: ver el path exacto y cualquier error
         console.log('📸 Intentando subir:', path)
         const { data: up, error: upErr } = await supabase.storage
           .from('fotos-reportes')
           .upload(path, f, { upsert: true })
-
-        if (upErr) {
-          console.error('❌ Error al subir foto:', upErr.message, '| Path:', path)
-          continue // salta a la siguiente foto sin romper todo
-        }
-
+        if (upErr) { console.error('❌ Error al subir foto:', upErr.message, '| Path:', path); continue }
         console.log('✅ Foto subida:', path)
         if (up) {
           const { data: { publicUrl } } = supabase.storage.from('fotos-reportes').getPublicUrl(path)
-          await supabase.from('fotos').insert({
-            reporte_id: rid, seccion: sec, url: publicUrl,
-            nombre_archivo: f.name, orden: i
-          })
+          await supabase.from('fotos').insert({ reporte_id: rid, seccion: sec, url: publicUrl, nombre_archivo: f.name, orden: i })
         }
       }
     }
@@ -275,7 +262,6 @@ export default function ReporteForm() {
     setAutoguardando(false)
   }
 
-  // ── NUEVO: autoguardado al salir de cualquier campo (blur) ──
   const autoguardarBlur = useCallback(() => {
     if (!reporteId || !puedeEditar) return
     autoguardar()
@@ -343,30 +329,19 @@ export default function ReporteForm() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <Campo label="Código RS-">
-          <input className={inp} value={enc.codigo_rs}
-            onChange={e=>setEnc(p=>({...p,codigo_rs:e.target.value}))}
-            onBlur={autoguardarBlur}
-            placeholder="174" disabled={!puedeEditar} />
+          <input className={inp} value={enc.codigo_rs} onChange={e=>setEnc(p=>({...p,codigo_rs:e.target.value}))} onBlur={autoguardarBlur} placeholder="174" disabled={!puedeEditar} />
         </Campo>
         <Campo label="Número de ventana">
-          <input className={inp} value={enc.numero_ventana}
-            onChange={e=>setEnc(p=>({...p,numero_ventana:e.target.value}))}
-            onBlur={autoguardarBlur}
-            placeholder="595314" disabled={!puedeEditar} />
+          <input className={inp} value={enc.numero_ventana} onChange={e=>setEnc(p=>({...p,numero_ventana:e.target.value}))} onBlur={autoguardarBlur} placeholder="595314" disabled={!puedeEditar} />
         </Campo>
       </div>
       <Campo label="Fecha del servicio">
-        <input type="date" className={inp} disabled={!puedeEditar}
-          onChange={e=>setEnc(p=>({...p,fecha_servicio:formatearFecha(e.target.value)}))}
-          onBlur={autoguardarBlur} />
+        <input type="date" className={inp} disabled={!puedeEditar} onChange={e=>setEnc(p=>({...p,fecha_servicio:formatearFecha(e.target.value)}))} onBlur={autoguardarBlur} />
         {enc.fecha_servicio && <p className="text-xs text-blue-600 mt-1 font-medium">→ {enc.fecha_servicio}</p>}
       </Campo>
       <ComboField label="Planta" options={PLANTAS} value={enc.planta} onChange={v=>setEnc(p=>({...p,planta:v}))} placeholder='PLANTA ALPHA "A"' disabled={!puedeEditar} />
       <Campo label="Sitio">
-        <input className={inp} value={enc.sitio}
-          onChange={e=>setEnc(p=>({...p,sitio:e.target.value}))}
-          onBlur={autoguardarBlur}
-          placeholder="CTC CUERNAVACA." disabled={!puedeEditar} />
+        <input className={inp} value={enc.sitio} onChange={e=>setEnc(p=>({...p,sitio:e.target.value}))} onBlur={autoguardarBlur} placeholder="CTC CUERNAVACA." disabled={!puedeEditar} />
       </Campo>
       <ComboField label="Ciudad" options={CIUDADES} value={enc.ciudad} onChange={v=>setEnc(p=>({...p,ciudad:v}))} placeholder="CUERNAVACA, MORELOS." disabled={!puedeEditar} />
     </div>,
@@ -383,8 +358,9 @@ export default function ReporteForm() {
         <Campo label="Voltaje operación"><input className={inp} type="number" value={datos.volt_op} onChange={e=>updDatos('volt_op',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
         <Campo label="Voltaje igualación"><input className={inp} type="number" value={datos.volt_ig} onChange={e=>updDatos('volt_ig',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
         <Campo label="Alarmas presentes"><input className={inp} value={datos.alarmas_dc} onChange={e=>updDatos('alarmas_dc',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
-        <Campo label="Calibre positivo"><input className={inp} value={datos.cal_pos} onChange={e=>updDatos('cal_pos',e.target.value)} onBlur={autoguardarBlur} placeholder="4/0" disabled={!puedeEditar} /></Campo>
-        <Campo label="Calibre tierra física"><input className={inp} value={datos.cal_tierra} onChange={e=>updDatos('cal_tierra',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
+        {/* ── NOMBRES ACTUALIZADOS ── */}
+        <Campo label="Calibre positivo de referencia"><input className={inp} value={datos.cal_pos} onChange={e=>updDatos('cal_pos',e.target.value)} onBlur={autoguardarBlur} placeholder="4/0" disabled={!puedeEditar} /></Campo>
+        <Campo label="Calibre de tierra física de chasis de planta"><input className={inp} value={datos.cal_tierra} onChange={e=>updDatos('cal_tierra',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
         <Campo label="Calibre barra delta"><input className={inp} value={datos.cal_barra} onChange={e=>updDatos('cal_barra',e.target.value)} onBlur={autoguardarBlur} placeholder="1/0" disabled={!puedeEditar} /></Campo>
       </div>
       <Campo label="Nota especial (A32)"><input className={inp} value={datos.nota_especial} onChange={e=>updDatos('nota_especial',e.target.value)} onBlur={autoguardarBlur} placeholder="SOLO TIENE CABLEADOS PARA X RECTIFICADORES..." disabled={!puedeEditar} /></Campo>
@@ -589,7 +565,6 @@ export default function ReporteForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Modal rechazo */}
       {showRechazoModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
