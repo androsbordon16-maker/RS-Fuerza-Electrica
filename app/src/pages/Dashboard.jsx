@@ -24,14 +24,24 @@ export default function Dashboard() {
   const [filtroEstado, setFiltroEstado] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
 
-  useEffect(() => { cargarReportes() }, [])
+  useEffect(() => { if (user) cargarReportes() }, [user, perfil])
 
   async function cargarReportes() {
-    let q = supabase.from('reportes').select('*, usuarios(nombre)').order('created_at', { ascending: false })
-    if (perfil?.rol !== 'admin') q = q.eq('tecnico_id', user?.id)
-    const { data } = await q
+    const { data } = await supabase
+      .from('reportes')
+      .select('*, usuarios(nombre, email)')
+      .order('created_at', { ascending: false })
     setReportes(data || [])
     setLoading(false)
+  }
+
+  async function eliminarReporte(e, id) {
+    e.stopPropagation()
+    if (!confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')) return
+    await supabase.from('fotos').delete().eq('reporte_id', id)
+    await supabase.from('historial').delete().eq('reporte_id', id)
+    await supabase.from('reportes').delete().eq('id', id)
+    cargarReportes()
   }
 
   const reportesFiltrados = reportes.filter(r => {
@@ -45,7 +55,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -60,43 +69,31 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2">
           {perfil?.rol === 'admin' && (
-            <button onClick={() => nav('/usuarios')} className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100">
-              Usuarios
-            </button>
+            <button onClick={() => nav('/usuarios')} className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100">Usuarios</button>
           )}
-          <button onClick={logout} className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100">
-            Salir
-          </button>
+          <button onClick={logout} className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100">Salir</button>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-6">
-        {/* Top bar */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <input
-            value={busqueda} onChange={e => setBusqueda(e.target.value)}
+          <input value={busqueda} onChange={e=>setBusqueda(e.target.value)}
             placeholder="Buscar por planta, sitio o RS..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <select
-            value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <select value={filtroEstado} onChange={e=>setFiltroEstado(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="todos">Todos los estados</option>
             <option value="borrador">Borrador</option>
             <option value="en_revision">En revisión</option>
             <option value="aprobado">Aprobado</option>
             <option value="rechazado">Rechazado</option>
           </select>
-          <button
-            onClick={() => nav('/reporte/nuevo')}
-            className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap"
-          >
+          <button onClick={() => nav('/reporte/nuevo')}
+            className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
             + Nuevo reporte
           </button>
         </div>
 
-        {/* Stats (admin only) */}
         {perfil?.rol === 'admin' && (
           <div className="grid grid-cols-4 gap-3 mb-6">
             {['todos','borrador','en_revision','aprobado'].map(e => (
@@ -110,7 +107,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* List */}
         {loading ? (
           <div className="text-center py-12 text-gray-400 text-sm">Cargando reportes...</div>
         ) : reportesFiltrados.length === 0 ? (
@@ -120,11 +116,8 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-2">
             {reportesFiltrados.map(r => (
-              <div
-                key={r.id}
-                onClick={() => nav(`/reporte/${r.id}`)}
-                className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all"
-              >
+              <div key={r.id} onClick={() => nav(`/reporte/${r.id}`)}
+                className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm">
                     {r.codigo_rs || '—'}
@@ -132,15 +125,22 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-900">{r.planta || 'Sin nombre'}</p>
                     <p className="text-xs text-gray-500">{r.sitio} · {r.fecha_servicio}</p>
-                    {perfil?.rol === 'admin' && r.usuarios && (
-                      <p className="text-xs text-gray-400">{r.usuarios.nombre}</p>
-                    )}
+                    <p className="text-xs text-gray-400">
+                      {r.usuarios?.nombre || r.usuarios?.email || '—'}
+                      {r.tecnico_id === user?.id && ' (tú)'}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${ESTADO_BADGE[r.estado]}`}>
                     {ESTADO_LABEL[r.estado]}
                   </span>
+                  {perfil?.rol === 'admin' && (
+                    <button onClick={e => eliminarReporte(e, r.id)}
+                      className="text-xs px-2 py-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                      🗑
+                    </button>
+                  )}
                   <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
