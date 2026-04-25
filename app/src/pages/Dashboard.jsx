@@ -3,18 +3,14 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 
-const ESTADO_BADGE = {
-  borrador: 'bg-gray-100 text-gray-600',
-  en_revision: 'bg-yellow-100 text-yellow-700',
-  aprobado: 'bg-green-100 text-green-700',
-  rechazado: 'bg-red-100 text-red-700',
+const ESTADO_CONFIG = {
+  borrador:    { label: 'Borrador',    bg: 'rgba(255,255,255,0.08)', color: '#9ca3af', border: 'rgba(156,163,175,0.3)', dot: '#6b7280' },
+  en_revision: { label: 'En revisión', bg: 'rgba(251,191,36,0.12)',  color: '#f59e0b', border: 'rgba(245,158,11,0.3)',  dot: '#f59e0b' },
+  aprobado:    { label: 'Aprobado',    bg: 'rgba(34,197,94,0.12)',   color: '#22c55e', border: 'rgba(34,197,94,0.3)',   dot: '#22c55e' },
+  rechazado:   { label: 'Rechazado',   bg: 'rgba(239,68,68,0.12)',   color: '#ef4444', border: 'rgba(239,68,68,0.3)',   dot: '#ef4444' },
 }
-const ESTADO_LABEL = {
-  borrador: 'Borrador',
-  en_revision: 'En revisión',
-  aprobado: 'Aprobado',
-  rechazado: 'Rechazado',
-}
+
+const LOGO_URL = 'https://wlxijxrbhuecnopybdwc.supabase.co/storage/v1/object/public/templates/logo-fuerza-electrica.jpg'
 
 export default function Dashboard() {
   const { perfil, logout, user } = useAuth()
@@ -35,7 +31,6 @@ export default function Dashboard() {
       .select('*, usuarios(id, nombre, email)')
       .order('created_at', { ascending: false })
     setReportes(data || [])
-    // Extraer técnicos únicos para filtro admin
     if (perfil?.rol === 'admin') {
       const unicos = []
       const ids = new Set()
@@ -52,31 +47,26 @@ export default function Dashboard() {
 
   async function cargarNotificaciones() {
     if (!user) return
-    // Buscar reportes propios con cambios recientes de estado
     const { data } = await supabase
       .from('historial')
       .select('*, reportes(codigo_rs, planta, estado)')
       .eq('accion', 'Estado cambiado a aprobado')
       .order('created_at', { ascending: false })
       .limit(5)
-
     const { data: rechazados } = await supabase
       .from('historial')
       .select('*, reportes(codigo_rs, planta, estado, tecnico_id)')
       .eq('accion', 'Estado cambiado a rechazado')
       .order('created_at', { ascending: false })
       .limit(5)
-
     const notifs = []
     ;(data || []).forEach(h => {
-      if (h.reportes?.estado === 'aprobado') {
+      if (h.reportes?.estado === 'aprobado')
         notifs.push({ tipo: 'aprobado', texto: `RS-${h.reportes.codigo_rs} — ${h.reportes.planta} fue aprobado ✓`, color: 'green' })
-      }
     })
     ;(rechazados || []).forEach(h => {
-      if (h.reportes?.estado === 'rechazado' && h.reportes?.tecnico_id === user.id) {
+      if (h.reportes?.estado === 'rechazado' && h.reportes?.tecnico_id === user.id)
         notifs.push({ tipo: 'rechazado', texto: `RS-${h.reportes.codigo_rs} — ${h.reportes.planta} fue rechazado`, color: 'red' })
-      }
     })
     setNotificaciones(notifs.slice(0, 3))
   }
@@ -90,12 +80,6 @@ export default function Dashboard() {
     cargarReportes()
   }
 
-  function formatFecha(f) {
-    if (!f) return '—'
-    // Already formatted like "LUNES 26/AGOSTO/2025"
-    return f
-  }
-
   const reportesFiltrados = reportes.filter(r => {
     const matchEstado = filtroEstado === 'todos' || r.estado === filtroEstado
     const matchTecnico = filtroTecnico === 'todos' || r.usuarios?.id === filtroTecnico
@@ -106,125 +90,214 @@ export default function Dashboard() {
     return matchEstado && matchTecnico && matchBusqueda
   })
 
+  const statsConfig = [
+    { key: 'todos',       label: 'Total',       icon: '📋' },
+    { key: 'borrador',    label: 'Borrador',    icon: '📝' },
+    { key: 'en_revision', label: 'En revisión', icon: '⏳' },
+    { key: 'aprobado',    label: 'Aprobado',    icon: '✅' },
+  ]
+
+  const inputStyle = {
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(146,102,26,0.25)',
+    borderRadius: '10px',
+    padding: '10px 14px',
+    fontSize: '13px',
+    color: '#e2e8f0',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#e2e8f0' }}>
+
+      {/* Header */}
+      <div style={{
+        background: 'rgba(20,15,8,0.95)',
+        borderBottom: '1px solid rgba(146,102,26,0.25)',
+        padding: '0 1.5rem',
+        height: '60px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 50,
+        backdropFilter: 'blur(12px)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src={LOGO_URL} alt="logo" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '8px' }} />
           <div>
-            <h1 className="text-sm font-semibold text-gray-900">Fuerza Eléctrica</h1>
-            <p className="text-xs text-gray-500">{perfil?.nombre} · {perfil?.rol === 'admin' ? 'Administrador' : 'Técnico'}</p>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: '#f59e0b', margin: 0 }}>Fuerza Eléctrica</p>
+            <p style={{ fontSize: '11px', color: '#78501a', margin: 0 }}>{perfil?.nombre} · {perfil?.rol === 'admin' ? 'Administrador' : 'Técnico'}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', gap: '8px' }}>
           {perfil?.rol === 'admin' && (
-            <button onClick={() => nav('/usuarios')} className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100">Usuarios</button>
+            <button onClick={() => nav('/usuarios')} style={{
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(146,102,26,0.2)',
+              color: '#9ca3af', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer'
+            }}>Usuarios</button>
           )}
-          <button onClick={logout} className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100">Salir</button>
+          <button onClick={logout} style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(146,102,26,0.2)',
+            color: '#9ca3af', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer'
+          }}>Salir</button>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '1.5rem 1rem' }}>
 
         {/* Notificaciones */}
         {notificaciones.length > 0 && (
-          <div className="mb-4 space-y-2">
-            {notificaciones.map((n,i) => (
-              <div key={i} className={`text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 ${n.color === 'green' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                <span>{n.texto}</span>
+          <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {notificaciones.map((n, i) => (
+              <div key={i} style={{
+                padding: '10px 16px', borderRadius: '10px', fontSize: '13px',
+                background: n.color === 'green' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                border: `1px solid ${n.color === 'green' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                color: n.color === 'green' ? '#22c55e' : '#ef4444',
+              }}>{n.texto}</div>
+            ))}
+          </div>
+        )}
+
+        {/* Stats admin */}
+        {perfil?.rol === 'admin' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '1.5rem' }}>
+            {statsConfig.map(s => (
+              <div key={s.key} style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(146,102,26,0.2)',
+                borderRadius: '14px', padding: '1rem',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '22px', marginBottom: '4px' }}>{s.icon}</div>
+                <p style={{ fontSize: '24px', fontWeight: '700', color: '#f59e0b', margin: 0 }}>
+                  {s.key === 'todos' ? reportes.length : reportes.filter(r => r.estado === s.key).length}
+                </p>
+                <p style={{ fontSize: '11px', color: '#78501a', margin: '2px 0 0' }}>{s.label}</p>
               </div>
             ))}
           </div>
         )}
 
         {/* Filtros */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <input value={busqueda} onChange={e=>setBusqueda(e.target.value)}
-            placeholder="Buscar por planta, sitio o RS..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <select value={filtroEstado} onChange={e=>setFiltroEstado(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="todos">Todos los estados</option>
-            <option value="borrador">Borrador</option>
-            <option value="en_revision">En revisión</option>
-            <option value="aprobado">Aprobado</option>
-            <option value="rechazado">Rechazado</option>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '1.25rem' }}>
+          <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+            <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#b45309" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
+              placeholder="Buscar por planta, sitio o RS..."
+              style={{ ...inputStyle, paddingLeft: '36px' }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(180,83,9,0.6)'; e.target.style.boxShadow = '0 0 0 3px rgba(180,83,9,0.1)' }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(146,102,26,0.25)'; e.target.style.boxShadow = 'none' }}
+            />
+          </div>
+          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}
+            style={{ ...inputStyle, width: 'auto', minWidth: '160px', cursor: 'pointer' }}>
+            <option value="todos" style={{ background: '#1a1008' }}>Todos los estados</option>
+            <option value="borrador" style={{ background: '#1a1008' }}>Borrador</option>
+            <option value="en_revision" style={{ background: '#1a1008' }}>En revisión</option>
+            <option value="aprobado" style={{ background: '#1a1008' }}>Aprobado</option>
+            <option value="rechazado" style={{ background: '#1a1008' }}>Rechazado</option>
           </select>
           {perfil?.rol === 'admin' && tecnicos.length > 0 && (
-            <select value={filtroTecnico} onChange={e=>setFiltroTecnico(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="todos">Todos los técnicos</option>
-              {tecnicos.map(t => <option key={t.id} value={t.id}>{t.nombre || t.email}</option>)}
+            <select value={filtroTecnico} onChange={e => setFiltroTecnico(e.target.value)}
+              style={{ ...inputStyle, width: 'auto', minWidth: '160px', cursor: 'pointer' }}>
+              <option value="todos" style={{ background: '#1a1008' }}>Todos los técnicos</option>
+              {tecnicos.map(t => <option key={t.id} value={t.id} style={{ background: '#1a1008' }}>{t.nombre || t.email}</option>)}
             </select>
           )}
-          <button onClick={() => nav('/reporte/nuevo')}
-            className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
-            + Nuevo reporte
-          </button>
+          <button onClick={() => nav('/reporte/nuevo')} style={{
+            background: 'linear-gradient(135deg,#f59e0b,#b45309)',
+            color: '#0a0a0a', fontWeight: '700', fontSize: '13px',
+            border: 'none', borderRadius: '10px', padding: '10px 18px',
+            cursor: 'pointer', whiteSpace: 'nowrap',
+            boxShadow: '0 4px 15px rgba(180,83,9,0.3)',
+          }}>+ Nuevo reporte</button>
         </div>
 
-        {/* Stats admin */}
-        {perfil?.rol === 'admin' && (
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            {['todos','borrador','en_revision','aprobado'].map(e => (
-              <div key={e} className="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <p className="text-2xl font-bold text-gray-900">
-                  {e === 'todos' ? reportes.length : reportes.filter(r => r.estado === e).length}
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">{e === 'todos' ? 'Total' : ESTADO_LABEL[e]}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Lista */}
+        {/* Lista de reportes */}
         {loading ? (
-          <div className="text-center py-12 text-gray-400 text-sm">Cargando reportes...</div>
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#78501a', fontSize: '13px' }}>Cargando reportes...</div>
         ) : reportesFiltrados.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            {reportes.length === 0 ? 'Aún no hay reportes. ¡Crea el primero!' : 'Sin resultados.'}
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#78501a', fontSize: '13px' }}>
+            {reportes.length === 0 ? '¡Crea tu primer reporte!' : 'Sin resultados.'}
           </div>
         ) : (
-          <div className="space-y-2">
-            {reportesFiltrados.map(r => (
-              <div key={r.id} onClick={() => nav(`/reporte/${r.id}`)}
-                className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-bold text-sm">
-                    {r.codigo_rs || '—'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {reportesFiltrados.map(r => {
+              const cfg = ESTADO_CONFIG[r.estado] || ESTADO_CONFIG.borrador
+              return (
+                <div key={r.id} onClick={() => nav(`/reporte/${r.id}`)}
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(146,102,26,0.18)',
+                    borderRadius: '14px', padding: '14px 16px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.border = '1px solid rgba(180,83,9,0.4)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                  onMouseLeave={e => { e.currentTarget.style.border = '1px solid rgba(146,102,26,0.18)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    {/* Código RS */}
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '10px',
+                      background: 'rgba(180,83,9,0.15)', border: '1px solid rgba(180,83,9,0.25)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '12px', fontWeight: '700', color: '#f59e0b',
+                      flexShrink: 0,
+                    }}>
+                      {r.codigo_rs || '—'}
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '600', color: '#e2e8f0', margin: '0 0 2px' }}>{r.planta || 'Sin nombre'}</p>
+                      <p style={{ fontSize: '12px', color: '#78501a', margin: '0 0 2px' }}>{r.sitio} · {r.fecha_servicio || '—'}</p>
+                      <p style={{ fontSize: '11px', color: '#4b3a1a', margin: 0 }}>
+                        {r.usuarios?.nombre || r.usuarios?.email || '—'}
+                        {r.tecnico_id === user?.id && ' (tú)'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{r.planta || 'Sin nombre'}</p>
-                    <p className="text-xs text-gray-500">{r.sitio} · {formatFecha(r.fecha_servicio)}</p>
-                    <p className="text-xs text-gray-400">
-                      {r.usuarios?.nombre || r.usuarios?.email || '—'}
-                      {r.tecnico_id === user?.id && ' (tú)'}
-                    </p>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '20px',
+                      background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+                      display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap',
+                    }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: cfg.dot, display: 'inline-block' }}/>
+                      {cfg.label}
+                    </span>
+                    {perfil?.rol === 'admin' && (
+                      <button onClick={e => eliminarReporte(e, r.id)} style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: '14px', padding: '4px', borderRadius: '6px',
+                        color: '#6b7280',
+                      }}>🗑</button>
+                    )}
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#4b3a1a" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${ESTADO_BADGE[r.estado]}`}>
-                    {ESTADO_LABEL[r.estado]}
-                  </span>
-                  {perfil?.rol === 'admin' && (
-                    <button onClick={e => eliminarReporte(e, r.id)}
-                      className="text-xs px-2 py-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                      🗑
-                    </button>
-                  )}
-                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
+
+      <style>{`
+        input::placeholder { color: #4b3a1a; }
+        select option { background: #1a1008; color: #e2e8f0; }
+        @media (max-width: 640px) {
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
     </div>
   )
 }
