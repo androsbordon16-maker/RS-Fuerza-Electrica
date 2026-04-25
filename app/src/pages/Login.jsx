@@ -25,131 +25,239 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Panel izquierdo — decorativo, solo en pantallas grandes */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gray-900 flex-col items-center justify-center p-12 relative overflow-hidden">
-        {/* Fondo con patrón */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59,130,246,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(250,204,21,0.1) 0%, transparent 40%)',
-        }} />
-        {/* Grid decorativo */}
-        <div className="absolute inset-0 opacity-5" style={{
-          backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
-          backgroundSize: '40px 40px'
-        }} />
-        <div className="relative z-10 text-center">
-          <img src={LOGO_URL} alt="Fuerza Eléctrica" className="w-40 h-40 mx-auto mb-8 object-contain drop-shadow-2xl" 
-            onError={e => { e.target.style.display='none' }} />
-          <h2 className="text-3xl font-bold text-white mb-3">Fuerza Eléctrica</h2>
-          <p className="text-gray-400 text-lg">Reportes de Servicios Preventivos</p>
-          <div className="mt-12 grid grid-cols-3 gap-6 text-center">
-            {[['📋','Reportes','Digitales'],['📸','Fotos','por Zona'],['📊','Excel','Automático']].map(([icon,t1,t2])=>(
-              <div key={t1} className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                <div className="text-2xl mb-2">{icon}</div>
-                <div className="text-white text-sm font-medium">{t1}</div>
-                <div className="text-gray-500 text-xs">{t2}</div>
-              </div>
-            ))}
-          </div>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1.5rem',
+      position: 'relative',
+      overflow: 'hidden',
+      background: '#0e0e0e',
+    }}>
+
+      {/* SVG fondo circuitos PCB dorados */}
+      <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none'}}
+        viewBox="0 0 800 700" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="glowCenter" cx="50%" cy="45%" r="40%">
+            <stop offset="0%" stopColor="#b45309" stopOpacity="0.35"/>
+            <stop offset="100%" stopColor="#0e0e0e" stopOpacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="800" height="700" fill="#0e0e0e"/>
+        <rect width="800" height="700" fill="url(#glowCenter)"/>
+
+        {/* Circuitos horizontales izquierda */}
+        <line x1="0" y1="80" x2="180" y2="80" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="180" y1="80" x2="200" y2="100" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="200" y1="100" x2="280" y2="100" stroke="#92661a" strokeWidth="1.2"/>
+        <circle cx="280" cy="100" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
+        <line x1="280" y1="100" x2="280" y2="60" stroke="#92661a" strokeWidth="1.2"/>
+        <circle cx="280" cy="60" r="3" fill="#b45309"/>
+
+        <line x1="0" y1="200" x2="120" y2="200" stroke="#78501a" strokeWidth="1"/>
+        <line x1="120" y1="200" x2="145" y2="175" stroke="#78501a" strokeWidth="1"/>
+        <line x1="145" y1="175" x2="230" y2="175" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="230" cy="175" r="3" fill="#78501a"/>
+        <line x1="230" y1="175" x2="230" y2="140" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="230" cy="140" r="2" fill="#92661a"/>
+
+        <line x1="0" y1="580" x2="150" y2="580" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="150" y1="580" x2="175" y2="555" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="175" y1="555" x2="290" y2="555" stroke="#92661a" strokeWidth="1.2"/>
+        <circle cx="290" cy="555" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
+        <line x1="290" y1="555" x2="290" y2="620" stroke="#92661a" strokeWidth="1.2"/>
+
+        <line x1="0" y1="440" x2="100" y2="440" stroke="#78501a" strokeWidth="1"/>
+        <line x1="100" y1="440" x2="120" y2="460" stroke="#78501a" strokeWidth="1"/>
+        <line x1="120" y1="460" x2="200" y2="460" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="200" cy="460" r="2.5" fill="#92661a"/>
+
+        {/* Circuitos horizontales derecha */}
+        <line x1="800" y1="80" x2="620" y2="80" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="620" y1="80" x2="600" y2="100" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="600" y1="100" x2="520" y2="100" stroke="#92661a" strokeWidth="1.2"/>
+        <circle cx="520" cy="100" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
+        <line x1="520" y1="100" x2="520" y2="60" stroke="#92661a" strokeWidth="1.2"/>
+        <circle cx="520" cy="60" r="3" fill="#b45309"/>
+
+        <line x1="800" y1="200" x2="680" y2="200" stroke="#78501a" strokeWidth="1"/>
+        <line x1="680" y1="200" x2="655" y2="225" stroke="#78501a" strokeWidth="1"/>
+        <line x1="655" y1="225" x2="570" y2="225" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="570" cy="225" r="3" fill="#78501a"/>
+        <line x1="570" y1="225" x2="570" y2="260" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="570" cy="260" r="2" fill="#92661a"/>
+
+        <line x1="800" y1="580" x2="650" y2="580" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="650" y1="580" x2="625" y2="555" stroke="#92661a" strokeWidth="1.2"/>
+        <line x1="625" y1="555" x2="510" y2="555" stroke="#92661a" strokeWidth="1.2"/>
+        <circle cx="510" cy="555" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
+        <line x1="510" y1="555" x2="510" y2="620" stroke="#92661a" strokeWidth="1.2"/>
+
+        <line x1="800" y1="440" x2="700" y2="440" stroke="#78501a" strokeWidth="1"/>
+        <line x1="700" y1="440" x2="680" y2="420" stroke="#78501a" strokeWidth="1"/>
+        <line x1="680" y1="420" x2="600" y2="420" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="600" cy="420" r="2.5" fill="#92661a"/>
+
+        {/* Circuitos verticales centro-arriba */}
+        <line x1="340" y1="0" x2="340" y2="80" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="340" cy="80" r="3" fill="#92661a"/>
+        <line x1="460" y1="0" x2="460" y2="70" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="460" cy="70" r="3" fill="#92661a"/>
+
+        {/* Circuitos verticales centro-abajo */}
+        <line x1="340" y1="700" x2="340" y2="620" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="340" cy="620" r="3" fill="#92661a"/>
+        <line x1="460" y1="700" x2="460" y2="630" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="460" cy="630" r="3" fill="#92661a"/>
+
+        {/* Nodos decorativos esquinas */}
+        <circle cx="60" cy="340" r="5" fill="none" stroke="#78501a" strokeWidth="1.5"/>
+        <circle cx="60" cy="340" r="2" fill="#92661a"/>
+        <circle cx="740" cy="340" r="5" fill="none" stroke="#78501a" strokeWidth="1.5"/>
+        <circle cx="740" cy="340" r="2" fill="#92661a"/>
+        <circle cx="150" cy="60" r="3" fill="none" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="650" cy="60" r="3" fill="none" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="150" cy="640" r="3" fill="none" stroke="#78501a" strokeWidth="1"/>
+        <circle cx="650" cy="640" r="3" fill="none" stroke="#78501a" strokeWidth="1"/>
+      </svg>
+
+      {/* Glow dorado detrás del logo */}
+      <div style={{
+        position:'absolute', top:'5%', left:'50%', transform:'translateX(-50%)',
+        width:'280px', height:'280px', borderRadius:'50%',
+        background:'radial-gradient(circle, rgba(180,83,9,0.3) 0%, transparent 65%)',
+        pointerEvents:'none', filter:'blur(20px)'
+      }}/>
+
+      {/* Contenido */}
+      <div style={{position:'relative', zIndex:10, width:'100%', maxWidth:'360px'}}>
+
+        {/* Logo */}
+        <div style={{textAlign:'center', marginBottom:'1.5rem'}}>
+          <img
+            src={LOGO_URL}
+            alt="Fuerza Eléctrica"
+            style={{
+              width:'170px', height:'170px',
+              objectFit:'contain',
+              filter:'drop-shadow(0 0 25px rgba(180,83,9,0.5))',
+            }}
+          />
         </div>
-      </div>
 
-      {/* Panel derecho — formulario */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-gray-50">
-        <div className="w-full max-w-sm">
-          {/* Logo visible solo en móvil */}
-          <div className="lg:hidden text-center mb-8">
-            <img src={LOGO_URL} alt="Fuerza Eléctrica" className="w-24 h-24 mx-auto mb-4 object-contain"
-              onError={e => {
-                e.target.style.display='none'
-                e.target.nextSibling.style.display='flex'
-              }} />
-            <div className="w-16 h-16 bg-gray-900 rounded-2xl mx-auto mb-4 items-center justify-center hidden">
-              <svg className="w-8 h-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900">Fuerza Eléctrica</h1>
-            <p className="text-sm text-gray-500">Reportes Preventivos</p>
-          </div>
+        {/* Card formulario */}
+        <div style={{
+          background:'rgba(30,25,20,0.75)',
+          backdropFilter:'blur(16px)',
+          border:'1px solid rgba(146,102,26,0.3)',
+          borderRadius:'18px',
+          padding:'1.75rem',
+          boxShadow:'0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03)'
+        }}>
+          <form onSubmit={handleLogin} style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
 
-          {/* Card del formulario */}
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Bienvenido</h2>
-              <p className="text-sm text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-5">
-              {/* Campo correo */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Correo electrónico</label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-gray-50 transition-all"
-                    placeholder="tecnico@ejemplo.com" required />
-                </div>
-              </div>
-
-              {/* Campo contraseña */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Contraseña</label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-                  <input type={showPwd ? 'text' : 'password'} value={password} onChange={e=>setPassword(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl pl-10 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-gray-50 transition-all"
-                    placeholder="••••••••" required />
-                  <button type="button" onClick={()=>setShowPwd(p=>!p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                    {showPwd ? (
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Error */}
-              {error && (
-                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 border border-red-100">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            {/* Correo */}
+            <div>
+              <label style={{display:'block', fontSize:'11px', color:'#92661a', letterSpacing:'0.12em', textTransform:'uppercase', fontWeight:'600', marginBottom:'6px'}}>Correo</label>
+              <div style={{position:'relative'}}>
+                <div style={{position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)'}}>
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#b45309" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                   </svg>
-                  {error}
                 </div>
-              )}
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                  style={{
+                    width:'100%', boxSizing:'border-box',
+                    paddingLeft:'36px', paddingRight:'12px', paddingTop:'12px', paddingBottom:'12px',
+                    fontSize:'14px', color:'#e2e8f0',
+                    background:'rgba(255,255,255,0.06)',
+                    border:'1px solid rgba(146,102,26,0.25)',
+                    borderRadius:'10px', outline:'none',
+                  }}
+                  onFocus={e=>{e.target.style.borderColor='rgba(180,83,9,0.7)'; e.target.style.boxShadow='0 0 0 3px rgba(180,83,9,0.12)'}}
+                  onBlur={e=>{e.target.style.borderColor='rgba(146,102,26,0.25)'; e.target.style.boxShadow='none'}}
+                  placeholder="tecnico@ejemplo.com" required />
+              </div>
+            </div>
 
-              {/* Botón */}
-              <button type="submit" disabled={loading}
-                className="w-full bg-gray-900 text-white rounded-xl py-3 text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-all active:scale-95 mt-2">
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                    </svg>
-                    Entrando...
-                  </span>
-                ) : 'Entrar'}
-              </button>
-            </form>
-          </div>
+            {/* Contraseña */}
+            <div>
+              <label style={{display:'block', fontSize:'11px', color:'#92661a', letterSpacing:'0.12em', textTransform:'uppercase', fontWeight:'600', marginBottom:'6px'}}>Contraseña</label>
+              <div style={{position:'relative'}}>
+                <div style={{position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)'}}>
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#b45309" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </div>
+                <input type={showPwd ? 'text' : 'password'} value={password} onChange={e=>setPassword(e.target.value)}
+                  style={{
+                    width:'100%', boxSizing:'border-box',
+                    paddingLeft:'36px', paddingRight:'40px', paddingTop:'12px', paddingBottom:'12px',
+                    fontSize:'14px', color:'#e2e8f0',
+                    background:'rgba(255,255,255,0.06)',
+                    border:'1px solid rgba(146,102,26,0.25)',
+                    borderRadius:'10px', outline:'none',
+                  }}
+                  onFocus={e=>{e.target.style.borderColor='rgba(180,83,9,0.7)'; e.target.style.boxShadow='0 0 0 3px rgba(180,83,9,0.12)'}}
+                  onBlur={e=>{e.target.style.borderColor='rgba(146,102,26,0.25)'; e.target.style.boxShadow='none'}}
+                  placeholder="••••••••" required />
+                <button type="button" onClick={()=>setShowPwd(p=>!p)}
+                  style={{position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#6b7280', padding:0}}>
+                  {showPwd ? (
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                  ) : (
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  )}
+                </button>
+              </div>
+            </div>
 
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Fuerza Eléctrica © {new Date().getFullYear()}
-          </p>
+            {/* Error */}
+            {error && (
+              <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:'#f87171', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:'10px', padding:'10px 12px'}}>
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{flexShrink:0}}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {error}
+              </div>
+            )}
+
+            {/* Botón */}
+            <button type="submit" disabled={loading}
+              style={{
+                width:'100%', padding:'13px',
+                background: loading ? 'rgba(180,83,9,0.5)' : 'linear-gradient(135deg,#f59e0b 0%,#b45309 100%)',
+                color:'#0a0a0a', fontWeight:'700', fontSize:'13px',
+                letterSpacing:'0.1em', textTransform:'uppercase',
+                border:'none', borderRadius:'10px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow: loading ? 'none' : '0 4px 20px rgba(180,83,9,0.35)',
+                transition:'all 0.2s', marginTop:'4px'
+              }}>
+              {loading ? (
+                <span style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'8px'}}>
+                  <svg style={{animation:'spin 1s linear infinite', width:'14px', height:'14px'}} fill="none" viewBox="0 0 24 24">
+                    <circle style={{opacity:0.25}} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path style={{opacity:0.75}} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Entrando...
+                </span>
+              ) : '⚡ Entrar'}
+            </button>
+          </form>
         </div>
+
+        <p style={{textAlign:'center', fontSize:'11px', color:'#4b3a1a', marginTop:'1.25rem'}}>
+          Fuerza Eléctrica © {new Date().getFullYear()}
+        </p>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        input::placeholder { color: #4b5563; }
+      `}</style>
     </div>
   )
 }
