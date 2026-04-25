@@ -28,6 +28,7 @@ export default function Login() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '1.5rem',
@@ -47,72 +48,56 @@ export default function Login() {
         </defs>
         <rect width="800" height="700" fill="#0e0e0e"/>
         <rect width="800" height="700" fill="url(#glowCenter)"/>
-
-        {/* Circuitos horizontales izquierda */}
         <line x1="0" y1="80" x2="180" y2="80" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="180" y1="80" x2="200" y2="100" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="200" y1="100" x2="280" y2="100" stroke="#92661a" strokeWidth="1.2"/>
         <circle cx="280" cy="100" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
         <line x1="280" y1="100" x2="280" y2="60" stroke="#92661a" strokeWidth="1.2"/>
         <circle cx="280" cy="60" r="3" fill="#b45309"/>
-
         <line x1="0" y1="200" x2="120" y2="200" stroke="#78501a" strokeWidth="1"/>
         <line x1="120" y1="200" x2="145" y2="175" stroke="#78501a" strokeWidth="1"/>
         <line x1="145" y1="175" x2="230" y2="175" stroke="#78501a" strokeWidth="1"/>
         <circle cx="230" cy="175" r="3" fill="#78501a"/>
         <line x1="230" y1="175" x2="230" y2="140" stroke="#78501a" strokeWidth="1"/>
         <circle cx="230" cy="140" r="2" fill="#92661a"/>
-
         <line x1="0" y1="580" x2="150" y2="580" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="150" y1="580" x2="175" y2="555" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="175" y1="555" x2="290" y2="555" stroke="#92661a" strokeWidth="1.2"/>
         <circle cx="290" cy="555" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
         <line x1="290" y1="555" x2="290" y2="620" stroke="#92661a" strokeWidth="1.2"/>
-
         <line x1="0" y1="440" x2="100" y2="440" stroke="#78501a" strokeWidth="1"/>
         <line x1="100" y1="440" x2="120" y2="460" stroke="#78501a" strokeWidth="1"/>
         <line x1="120" y1="460" x2="200" y2="460" stroke="#78501a" strokeWidth="1"/>
         <circle cx="200" cy="460" r="2.5" fill="#92661a"/>
-
-        {/* Circuitos horizontales derecha */}
         <line x1="800" y1="80" x2="620" y2="80" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="620" y1="80" x2="600" y2="100" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="600" y1="100" x2="520" y2="100" stroke="#92661a" strokeWidth="1.2"/>
         <circle cx="520" cy="100" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
         <line x1="520" y1="100" x2="520" y2="60" stroke="#92661a" strokeWidth="1.2"/>
         <circle cx="520" cy="60" r="3" fill="#b45309"/>
-
         <line x1="800" y1="200" x2="680" y2="200" stroke="#78501a" strokeWidth="1"/>
         <line x1="680" y1="200" x2="655" y2="225" stroke="#78501a" strokeWidth="1"/>
         <line x1="655" y1="225" x2="570" y2="225" stroke="#78501a" strokeWidth="1"/>
         <circle cx="570" cy="225" r="3" fill="#78501a"/>
         <line x1="570" y1="225" x2="570" y2="260" stroke="#78501a" strokeWidth="1"/>
         <circle cx="570" cy="260" r="2" fill="#92661a"/>
-
         <line x1="800" y1="580" x2="650" y2="580" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="650" y1="580" x2="625" y2="555" stroke="#92661a" strokeWidth="1.2"/>
         <line x1="625" y1="555" x2="510" y2="555" stroke="#92661a" strokeWidth="1.2"/>
         <circle cx="510" cy="555" r="4" fill="none" stroke="#92661a" strokeWidth="1.5"/>
         <line x1="510" y1="555" x2="510" y2="620" stroke="#92661a" strokeWidth="1.2"/>
-
         <line x1="800" y1="440" x2="700" y2="440" stroke="#78501a" strokeWidth="1"/>
         <line x1="700" y1="440" x2="680" y2="420" stroke="#78501a" strokeWidth="1"/>
         <line x1="680" y1="420" x2="600" y2="420" stroke="#78501a" strokeWidth="1"/>
         <circle cx="600" cy="420" r="2.5" fill="#92661a"/>
-
-        {/* Circuitos verticales centro-arriba */}
         <line x1="340" y1="0" x2="340" y2="80" stroke="#78501a" strokeWidth="1"/>
         <circle cx="340" cy="80" r="3" fill="#92661a"/>
         <line x1="460" y1="0" x2="460" y2="70" stroke="#78501a" strokeWidth="1"/>
         <circle cx="460" cy="70" r="3" fill="#92661a"/>
-
-        {/* Circuitos verticales centro-abajo */}
         <line x1="340" y1="700" x2="340" y2="620" stroke="#78501a" strokeWidth="1"/>
         <circle cx="340" cy="620" r="3" fill="#92661a"/>
         <line x1="460" y1="700" x2="460" y2="630" stroke="#78501a" strokeWidth="1"/>
         <circle cx="460" cy="630" r="3" fill="#92661a"/>
-
-        {/* Nodos decorativos esquinas */}
         <circle cx="60" cy="340" r="5" fill="none" stroke="#78501a" strokeWidth="1.5"/>
         <circle cx="60" cy="340" r="2" fill="#92661a"/>
         <circle cx="740" cy="340" r="5" fill="none" stroke="#78501a" strokeWidth="1.5"/>
@@ -126,30 +111,32 @@ export default function Login() {
       {/* Glow dorado detrás del logo */}
       <div style={{
         position:'absolute', top:'5%', left:'50%', transform:'translateX(-50%)',
-        width:'280px', height:'280px', borderRadius:'50%',
+        width:'300px', height:'300px', borderRadius:'50%',
         background:'radial-gradient(circle, rgba(180,83,9,0.3) 0%, transparent 65%)',
         pointerEvents:'none', filter:'blur(20px)'
       }}/>
 
-      {/* Contenido */}
-      <div style={{position:'relative', zIndex:10, width:'100%', maxWidth:'360px'}}>
+      {/* Logo — centrado independiente del card */}
+      <div style={{position:'relative', zIndex:10, textAlign:'center', marginBottom:'1.25rem'}}>
+        <img
+          src={LOGO_URL}
+          alt="Fuerza Eléctrica"
+          style={{
+            width:'200px',
+            height:'200px',
+            objectFit:'contain',
+            filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
+          }}
+        />
+      </div>
 
-        {/* Logo */}
-        <div style={{textAlign:'center', marginBottom:'1.5rem'}}>
-          <img
-            src={LOGO_URL}
-            alt="Fuerza Eléctrica"
-            style={{
-              width:'220px', height:'220px',
-              objectFit:'contain',
-              filter:'drop-shadow(0 0 25px rgba(180,83,9,0.5))',
-            }}
-          />
-        </div>
-
-        {/* Card formulario */}
+      {/* Card formulario — centrado independiente */}
+      <div style={{
+        position:'relative', zIndex:10,
+        width:'100%', maxWidth:'360px',
+      }}>
         <div style={{
-          background:'rgba(30,25,20,0.75)',
+          background:'rgba(30,25,20,0.78)',
           backdropFilter:'blur(16px)',
           border:'1px solid rgba(146,102,26,0.3)',
           borderRadius:'18px',
