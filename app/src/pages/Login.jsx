@@ -122,10 +122,11 @@ export default function Login() {
           src={LOGO_URL}
           alt="Fuerza Eléctrica"
           style={{
-            width:'200px',
-            height:'200px',
-            objectFit:'contain',
-            filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
+            width:'160px',
+            height:'1600px',
+objectFit:'cover',
+borderRadius:'24px',
+filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
           }}
         />
       </div>
