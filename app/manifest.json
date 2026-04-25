@@ -1,0 +1,20 @@
+{
+  "name": "Fuerza Eléctrica",
+  "short_name": "FuerzaEléctrica",
+  "icons": [
+    {
+      "src": "/logo-fuerza-electrica.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/logo-fuerza-electrica.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111008",
+  "theme_color": "#b45309"
+}
