@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 
-const LOGO_URL = 'https://wlxijxrbhuecnopybdwc.supabase.co/storage/v1/object/public/templates/logo-fuerza-electrica.png'
-
 export default function Login() {
   const { login, user } = useAuth()
   const nav = useNavigate()
@@ -28,7 +26,6 @@ export default function Login() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '1.5rem',
@@ -37,11 +34,12 @@ export default function Login() {
       background: '#0e0e0e',
     }}>
 
+      {/* Fondo circuitos dorados */}
       <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none'}}
         viewBox="0 0 800 700" preserveAspectRatio="xMidYMid slice">
         <defs>
-          <radialGradient id="glowCenter" cx="50%" cy="45%" r="40%">
-            <stop offset="0%" stopColor="#b45309" stopOpacity="0.35"/>
+          <radialGradient id="glowCenter" cx="50%" cy="50%" r="40%">
+            <stop offset="0%" stopColor="#b45309" stopOpacity="0.3"/>
             <stop offset="100%" stopColor="#0e0e0e" stopOpacity="0"/>
           </radialGradient>
         </defs>
@@ -107,39 +105,22 @@ export default function Login() {
         <circle cx="650" cy="640" r="3" fill="none" stroke="#78501a" strokeWidth="1"/>
       </svg>
 
-      <div style={{
-        position:'absolute', top:'5%', left:'50%', transform:'translateX(-50%)',
-        width:'300px', height:'300px', borderRadius:'50%',
-        background:'radial-gradient(circle, rgba(180,83,9,0.3) 0%, transparent 65%)',
-        pointerEvents:'none', filter:'blur(20px)'
-      }}/>
-
-      {/* Logo */}
-      <div style={{position:'relative', zIndex:10, textAlign:'center', marginBottom:'1.25rem'}}>
-        <img
-          src={LOGO_URL}
-          alt="Fuerza Eléctrica"
-          style={{
-            width:'180px',
-            height:'180px',
-            objectFit:'contain',
-            filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
-          }}
-        />
-      </div>
-
-      {/* Card formulario */}
+      {/* Card formulario centrado */}
       <div style={{position:'relative', zIndex:10, width:'100%', maxWidth:'360px'}}>
         <div style={{
           background:'rgba(30,25,20,0.78)',
           backdropFilter:'blur(16px)',
           border:'1px solid rgba(146,102,26,0.3)',
           borderRadius:'18px',
-          padding:'1.75rem',
+          padding:'2rem',
           boxShadow:'0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03)'
         }}>
-          <form onSubmit={handleLogin} style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
+          <div style={{textAlign:'center', marginBottom:'1.5rem'}}>
+            <p style={{fontSize:'20px', fontWeight:'700', color:'#f59e0b', letterSpacing:'0.05em'}}>FUERZA ELÉCTRICA</p>
+            <p style={{fontSize:'11px', color:'#78501a', letterSpacing:'0.1em', textTransform:'uppercase', marginTop:'4px'}}>Reportes Preventivos</p>
+          </div>
 
+          <form onSubmit={handleLogin} style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
             <div>
               <label style={{display:'block', fontSize:'11px', color:'#92661a', letterSpacing:'0.12em', textTransform:'uppercase', fontWeight:'600', marginBottom:'6px'}}>Correo</label>
               <div style={{position:'relative'}}>
