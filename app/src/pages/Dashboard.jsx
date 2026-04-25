@@ -164,7 +164,7 @@ export default function Dashboard() {
 
         {/* Stats admin */}
         {perfil?.rol === 'admin' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '1.5rem' }}>
             {statsConfig.map(s => (
               <div key={s.key} style={{
                 background: 'rgba(180,83,9,0.08)',
