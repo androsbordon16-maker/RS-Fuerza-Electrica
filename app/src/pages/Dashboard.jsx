@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom'
 
 const ESTADO_CONFIG = {
   borrador:    { label: 'Borrador',    bg: 'rgba(255,255,255,0.08)', color: '#9ca3af', border: 'rgba(156,163,175,0.3)', dot: '#6b7280' },
-  en_revision: { label: 'En revisión', bg: 'rgba(251,191,36,0.12)',  color: '#f59e0b', border: 'rgba(245,158,11,0.3)',  dot: '#f59e0b' },
-  aprobado:    { label: 'Aprobado',    bg: 'rgba(34,197,94,0.12)',   color: '#22c55e', border: 'rgba(34,197,94,0.3)',   dot: '#22c55e' },
-  rechazado:   { label: 'Rechazado',   bg: 'rgba(239,68,68,0.12)',   color: '#ef4444', border: 'rgba(239,68,68,0.3)',   dot: '#ef4444' },
+  en_revision: { label: 'En revisión', bg: 'rgba(251,191,36,0.15)',  color: '#f59e0b', border: 'rgba(245,158,11,0.4)',  dot: '#f59e0b' },
+  aprobado:    { label: 'Aprobado',    bg: 'rgba(34,197,94,0.15)',   color: '#22c55e', border: 'rgba(34,197,94,0.4)',   dot: '#22c55e' },
+  rechazado:   { label: 'Rechazado',   bg: 'rgba(239,68,68,0.15)',   color: '#ef4444', border: 'rgba(239,68,68,0.4)',   dot: '#ef4444' },
 }
 
 const LOGO_URL = 'https://wlxijxrbhuecnopybdwc.supabase.co/storage/v1/object/public/templates/logo-fuerza-electrica.jpg'
@@ -98,24 +98,23 @@ export default function Dashboard() {
   ]
 
   const inputStyle = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(146,102,26,0.25)',
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(146,102,26,0.4)',
     borderRadius: '10px',
     padding: '10px 14px',
     fontSize: '13px',
     color: '#e2e8f0',
     outline: 'none',
-    width: '100%',
     boxSizing: 'border-box',
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#e2e8f0' }}>
+    <div style={{ minHeight: '100vh', background: '#111008', color: '#e2e8f0' }}>
 
       {/* Header */}
       <div style={{
-        background: 'rgba(20,15,8,0.95)',
-        borderBottom: '1px solid rgba(146,102,26,0.25)',
+        background: 'rgba(25,18,5,0.98)',
+        borderBottom: '1px solid rgba(180,83,9,0.3)',
         padding: '0 1.5rem',
         height: '60px',
         display: 'flex',
@@ -123,24 +122,26 @@ export default function Dashboard() {
         justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 50,
         backdropFilter: 'blur(12px)',
+        boxShadow: '0 2px 20px rgba(0,0,0,0.5)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img src={LOGO_URL} alt="logo" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '8px' }} />
           <div>
             <p style={{ fontSize: '14px', fontWeight: '700', color: '#f59e0b', margin: 0 }}>Fuerza Eléctrica</p>
-            <p style={{ fontSize: '11px', color: '#78501a', margin: 0 }}>{perfil?.nombre} · {perfil?.rol === 'admin' ? 'Administrador' : 'Técnico'}</p>
+            <p style={{ fontSize: '11px', color: '#92661a', margin: 0 }}>{perfil?.nombre} · {perfil?.rol === 'admin' ? 'Administrador' : 'Técnico'}</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {perfil?.rol === 'admin' && (
             <button onClick={() => nav('/usuarios')} style={{
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(146,102,26,0.2)',
-              color: '#9ca3af', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer'
+              background: 'rgba(180,83,9,0.12)', border: '1px solid rgba(180,83,9,0.3)',
+              color: '#d97706', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer',
+              fontWeight: '600',
             }}>Usuarios</button>
           )}
           <button onClick={logout} style={{
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(146,102,26,0.2)',
-            color: '#9ca3af', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer'
+            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+            color: '#9ca3af', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer',
           }}>Salir</button>
         </div>
       </div>
@@ -153,9 +154,9 @@ export default function Dashboard() {
             {notificaciones.map((n, i) => (
               <div key={i} style={{
                 padding: '10px 16px', borderRadius: '10px', fontSize: '13px',
-                background: n.color === 'green' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                border: `1px solid ${n.color === 'green' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
-                color: n.color === 'green' ? '#22c55e' : '#ef4444',
+                background: n.color === 'green' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                border: `1px solid ${n.color === 'green' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                color: n.color === 'green' ? '#4ade80' : '#f87171',
               }}>{n.texto}</div>
             ))}
           </div>
@@ -166,16 +167,17 @@ export default function Dashboard() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '1.5rem' }}>
             {statsConfig.map(s => (
               <div key={s.key} style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(146,102,26,0.2)',
+                background: 'rgba(180,83,9,0.08)',
+                border: '1px solid rgba(180,83,9,0.3)',
                 borderRadius: '14px', padding: '1rem',
                 textAlign: 'center',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
               }}>
                 <div style={{ fontSize: '22px', marginBottom: '4px' }}>{s.icon}</div>
-                <p style={{ fontSize: '24px', fontWeight: '700', color: '#f59e0b', margin: 0 }}>
+                <p style={{ fontSize: '26px', fontWeight: '700', color: '#f59e0b', margin: 0 }}>
                   {s.key === 'todos' ? reportes.length : reportes.filter(r => r.estado === s.key).length}
                 </p>
-                <p style={{ fontSize: '11px', color: '#78501a', margin: '2px 0 0' }}>{s.label}</p>
+                <p style={{ fontSize: '11px', color: '#92661a', margin: '2px 0 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</p>
               </div>
             ))}
           </div>
@@ -191,24 +193,24 @@ export default function Dashboard() {
             </div>
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar por planta, sitio o RS..."
-              style={{ ...inputStyle, paddingLeft: '36px' }}
-              onFocus={e => { e.target.style.borderColor = 'rgba(180,83,9,0.6)'; e.target.style.boxShadow = '0 0 0 3px rgba(180,83,9,0.1)' }}
-              onBlur={e => { e.target.style.borderColor = 'rgba(146,102,26,0.25)'; e.target.style.boxShadow = 'none' }}
+              style={{ ...inputStyle, width: '100%', paddingLeft: '36px' }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(180,83,9,0.7)'; e.target.style.boxShadow = '0 0 0 3px rgba(180,83,9,0.1)' }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(146,102,26,0.4)'; e.target.style.boxShadow = 'none' }}
             />
           </div>
           <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}
-            style={{ ...inputStyle, width: 'auto', minWidth: '160px', cursor: 'pointer' }}>
-            <option value="todos" style={{ background: '#1a1008' }}>Todos los estados</option>
-            <option value="borrador" style={{ background: '#1a1008' }}>Borrador</option>
-            <option value="en_revision" style={{ background: '#1a1008' }}>En revisión</option>
-            <option value="aprobado" style={{ background: '#1a1008' }}>Aprobado</option>
-            <option value="rechazado" style={{ background: '#1a1008' }}>Rechazado</option>
+            style={{ ...inputStyle, minWidth: '160px', cursor: 'pointer' }}>
+            <option value="todos" style={{ background: '#1a0f02' }}>Todos los estados</option>
+            <option value="borrador" style={{ background: '#1a0f02' }}>Borrador</option>
+            <option value="en_revision" style={{ background: '#1a0f02' }}>En revisión</option>
+            <option value="aprobado" style={{ background: '#1a0f02' }}>Aprobado</option>
+            <option value="rechazado" style={{ background: '#1a0f02' }}>Rechazado</option>
           </select>
           {perfil?.rol === 'admin' && tecnicos.length > 0 && (
             <select value={filtroTecnico} onChange={e => setFiltroTecnico(e.target.value)}
-              style={{ ...inputStyle, width: 'auto', minWidth: '160px', cursor: 'pointer' }}>
-              <option value="todos" style={{ background: '#1a1008' }}>Todos los técnicos</option>
-              {tecnicos.map(t => <option key={t.id} value={t.id} style={{ background: '#1a1008' }}>{t.nombre || t.email}</option>)}
+              style={{ ...inputStyle, minWidth: '160px', cursor: 'pointer' }}>
+              <option value="todos" style={{ background: '#1a0f02' }}>Todos los técnicos</option>
+              {tecnicos.map(t => <option key={t.id} value={t.id} style={{ background: '#1a0f02' }}>{t.nombre || t.email}</option>)}
             </select>
           )}
           <button onClick={() => nav('/reporte/nuevo')} style={{
@@ -216,15 +218,15 @@ export default function Dashboard() {
             color: '#0a0a0a', fontWeight: '700', fontSize: '13px',
             border: 'none', borderRadius: '10px', padding: '10px 18px',
             cursor: 'pointer', whiteSpace: 'nowrap',
-            boxShadow: '0 4px 15px rgba(180,83,9,0.3)',
+            boxShadow: '0 4px 15px rgba(180,83,9,0.35)',
           }}>+ Nuevo reporte</button>
         </div>
 
         {/* Lista de reportes */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: '#78501a', fontSize: '13px' }}>Cargando reportes...</div>
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#92661a', fontSize: '13px' }}>Cargando reportes...</div>
         ) : reportesFiltrados.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: '#78501a', fontSize: '13px' }}>
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#92661a', fontSize: '13px' }}>
             {reportes.length === 0 ? '¡Crea tu primer reporte!' : 'Sin resultados.'}
           </div>
         ) : (
@@ -234,20 +236,28 @@ export default function Dashboard() {
               return (
                 <div key={r.id} onClick={() => nav(`/reporte/${r.id}`)}
                   style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(146,102,26,0.18)',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(180,83,9,0.2)',
                     borderRadius: '14px', padding: '14px 16px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     cursor: 'pointer', transition: 'all 0.15s',
+                    boxShadow: '0 1px 8px rgba(0,0,0,0.3)',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.border = '1px solid rgba(180,83,9,0.4)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                  onMouseLeave={e => { e.currentTarget.style.border = '1px solid rgba(146,102,26,0.18)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.border = '1px solid rgba(180,83,9,0.5)'
+                    e.currentTarget.style.background = 'rgba(180,83,9,0.07)'
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.border = '1px solid rgba(180,83,9,0.2)'
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+                    e.currentTarget.style.boxShadow = '0 1px 8px rgba(0,0,0,0.3)'
+                  }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    {/* Código RS */}
                     <div style={{
                       width: '44px', height: '44px', borderRadius: '10px',
-                      background: 'rgba(180,83,9,0.15)', border: '1px solid rgba(180,83,9,0.25)',
+                      background: 'rgba(180,83,9,0.2)', border: '1px solid rgba(180,83,9,0.35)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '12px', fontWeight: '700', color: '#f59e0b',
                       flexShrink: 0,
@@ -255,9 +265,9 @@ export default function Dashboard() {
                       {r.codigo_rs || '—'}
                     </div>
                     <div>
-                      <p style={{ fontSize: '14px', fontWeight: '600', color: '#e2e8f0', margin: '0 0 2px' }}>{r.planta || 'Sin nombre'}</p>
-                      <p style={{ fontSize: '12px', color: '#78501a', margin: '0 0 2px' }}>{r.sitio} · {r.fecha_servicio || '—'}</p>
-                      <p style={{ fontSize: '11px', color: '#4b3a1a', margin: 0 }}>
+                      <p style={{ fontSize: '14px', fontWeight: '600', color: '#f0e6d3', margin: '0 0 2px' }}>{r.planta || 'Sin nombre'}</p>
+                      <p style={{ fontSize: '12px', color: '#92661a', margin: '0 0 2px' }}>{r.sitio} · {r.fecha_servicio || '—'}</p>
+                      <p style={{ fontSize: '11px', color: '#6b4f2a', margin: 0 }}>
                         {r.usuarios?.nombre || r.usuarios?.email || '—'}
                         {r.tecnico_id === user?.id && ' (tú)'}
                       </p>
@@ -276,11 +286,10 @@ export default function Dashboard() {
                     {perfil?.rol === 'admin' && (
                       <button onClick={e => eliminarReporte(e, r.id)} style={{
                         background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: '14px', padding: '4px', borderRadius: '6px',
-                        color: '#6b7280',
+                        fontSize: '14px', padding: '4px', borderRadius: '6px', color: '#6b7280',
                       }}>🗑</button>
                     )}
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#4b3a1a" strokeWidth="2">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#92661a" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
                   </div>
@@ -292,11 +301,8 @@ export default function Dashboard() {
       </div>
 
       <style>{`
-        input::placeholder { color: #4b3a1a; }
-        select option { background: #1a1008; color: #e2e8f0; }
-        @media (max-width: 640px) {
-          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
+        input::placeholder { color: #6b4f2a; }
+        select option { background: #1a0f02; color: #e2e8f0; }
       `}</style>
     </div>
   )
