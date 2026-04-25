@@ -37,7 +37,6 @@ export default function Login() {
       background: '#0e0e0e',
     }}>
 
-      {/* SVG fondo circuitos PCB dorados */}
       <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none'}}
         viewBox="0 0 800 700" preserveAspectRatio="xMidYMid slice">
         <defs>
@@ -108,7 +107,6 @@ export default function Login() {
         <circle cx="650" cy="640" r="3" fill="none" stroke="#78501a" strokeWidth="1"/>
       </svg>
 
-      {/* Glow dorado detrás del logo */}
       <div style={{
         position:'absolute', top:'5%', left:'50%', transform:'translateX(-50%)',
         width:'300px', height:'300px', borderRadius:'50%',
@@ -116,26 +114,22 @@ export default function Login() {
         pointerEvents:'none', filter:'blur(20px)'
       }}/>
 
-      {/* Logo — centrado independiente del card */}
+      {/* Logo */}
       <div style={{position:'relative', zIndex:10, textAlign:'center', marginBottom:'1.25rem'}}>
         <img
           src={LOGO_URL}
           alt="Fuerza Eléctrica"
           style={{
-            width:'160px',
-            height:'1600px',
-objectFit:'cover',
-borderRadius:'24px',
-filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
+            width:'180px',
+            height:'180px',
+            objectFit:'contain',
+            filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
           }}
         />
       </div>
 
-      {/* Card formulario — centrado independiente */}
-      <div style={{
-        position:'relative', zIndex:10,
-        width:'100%', maxWidth:'360px',
-      }}>
+      {/* Card formulario */}
+      <div style={{position:'relative', zIndex:10, width:'100%', maxWidth:'360px'}}>
         <div style={{
           background:'rgba(30,25,20,0.78)',
           backdropFilter:'blur(16px)',
@@ -146,7 +140,6 @@ filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
         }}>
           <form onSubmit={handleLogin} style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
 
-            {/* Correo */}
             <div>
               <label style={{display:'block', fontSize:'11px', color:'#92661a', letterSpacing:'0.12em', textTransform:'uppercase', fontWeight:'600', marginBottom:'6px'}}>Correo</label>
               <div style={{position:'relative'}}>
@@ -170,7 +163,6 @@ filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
               </div>
             </div>
 
-            {/* Contraseña */}
             <div>
               <label style={{display:'block', fontSize:'11px', color:'#92661a', letterSpacing:'0.12em', textTransform:'uppercase', fontWeight:'600', marginBottom:'6px'}}>Contraseña</label>
               <div style={{position:'relative'}}>
@@ -202,7 +194,6 @@ filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:'#f87171', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:'10px', padding:'10px 12px'}}>
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{flexShrink:0}}>
@@ -212,7 +203,6 @@ filter:'drop-shadow(0 0 28px rgba(180,83,9,0.55))',
               </div>
             )}
 
-            {/* Botón */}
             <button type="submit" disabled={loading}
               style={{
                 width:'100%', padding:'13px',
