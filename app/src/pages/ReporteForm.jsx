@@ -10,6 +10,22 @@ const PLANTAS = ['PLANTA ALPHA "A"','PLANTA ALPHA','PLANTA ASSY 2000','PLANTA CX
 const DIAS = ['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO']
 const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 
+// Opciones de Apriete AWG
+const OPCIONES_APRIETE = [
+  'OK / 2 AWG',
+  'OK / 4 AWG',
+  'OK / 6 AWG',
+  'OK / 8 AWG',
+  'OK / 1/0 AWG',
+  'OK / 2/0 AWG',
+  'OK / 3/0 AWG',
+  'OK / 4/0 AWG',
+  'OK / 250 MCM',
+  'OK / 350 MCM',
+  'OK / 500 MCM',
+  'OTRA',
+]
+
 const DATOS_INIT = {
   modelo:'', serie:'', rect_total:'', rect_inst:'', cap_rect:'', carga:'',
   volt_op:'54', volt_ig:'54.5', alarmas_dc:'NO', cal_pos:'', cal_tierra:'', cal_barra:'',
@@ -61,6 +77,46 @@ function ComboField({label, options, value, onChange, placeholder='', disabled=f
         </div>
       )}
     </Campo>
+  )
+}
+
+// Selector de Apriete con opciones predefinidas y opción de texto libre
+function AprieteSel({value, onChange, disabled=false}) {
+  const esOtra = value !== '' && !OPCIONES_APRIETE.filter(o=>o!=='OTRA').includes(value)
+  const [custom, setCustom] = useState(esOtra)
+  return (
+    <div className="flex gap-0.5">
+      {!custom ? (
+        <select
+          className="border border-gray-300 rounded px-1 py-1 text-xs w-24 focus:outline-none bg-white"
+          value={value}
+          onChange={e => {
+            if (e.target.value === 'OTRA') { setCustom(true); onChange('') }
+            else onChange(e.target.value)
+          }}
+          disabled={disabled}
+        >
+          <option value="">--</option>
+          {OPCIONES_APRIETE.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : (
+        <div className="flex gap-0.5">
+          <input
+            className="border border-gray-300 rounded px-1 py-1 text-xs w-20 focus:outline-none"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder="Ej: OK/6AWG"
+            disabled={disabled}
+          />
+          {!disabled && (
+            <button
+              onClick={() => { setCustom(false); onChange('') }}
+              className="text-xs text-gray-400 hover:text-gray-600 px-1 border border-gray-300 rounded"
+            >↩</button>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -358,7 +414,6 @@ export default function ReporteForm() {
         <Campo label="Voltaje operación"><input className={inp} type="number" value={datos.volt_op} onChange={e=>updDatos('volt_op',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
         <Campo label="Voltaje igualación"><input className={inp} type="number" value={datos.volt_ig} onChange={e=>updDatos('volt_ig',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
         <Campo label="Alarmas presentes"><input className={inp} value={datos.alarmas_dc} onChange={e=>updDatos('alarmas_dc',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
-        {/* ── NOMBRES ACTUALIZADOS ── */}
         <Campo label="Calibre positivo de referencia"><input className={inp} value={datos.cal_pos} onChange={e=>updDatos('cal_pos',e.target.value)} onBlur={autoguardarBlur} placeholder="4/0" disabled={!puedeEditar} /></Campo>
         <Campo label="Calibre de tierra física de chasis de planta"><input className={inp} value={datos.cal_tierra} onChange={e=>updDatos('cal_tierra',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></Campo>
         <Campo label="Calibre barra delta"><input className={inp} value={datos.cal_barra} onChange={e=>updDatos('cal_barra',e.target.value)} onBlur={autoguardarBlur} placeholder="1/0" disabled={!puedeEditar} /></Campo>
@@ -371,18 +426,30 @@ export default function ReporteForm() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead><tr className="text-gray-400 text-left">{['Apr L','Tmp L','Etq L','RECT. izq','AMP izq','RECT. der','AMP der','Apr R','Tmp R','Etq R',''].map((h,i)=><th key={i} className="pb-1 pr-1 font-medium whitespace-nowrap">{h}</th>)}</tr></thead>
+            <thead>
+              <tr className="text-gray-400 text-left">
+                {['Apr L','Tmp L','Etq L','RECT. izq','AMP izq','RECT. der','AMP der','Apr R','Tmp R','Etq R',''].map((h,i)=>
+                  <th key={i} className="pb-1 pr-1 font-medium whitespace-nowrap">{h}</th>
+                )}
+              </tr>
+            </thead>
             <tbody>
               {datos.rect_rows.map((row,i) => (
                 <tr key={i}>
-                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-16 focus:outline-none" value={row.al} onChange={e=>updArr('rect_rows',i,'al',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
+                  {/* Apr L — selector AWG */}
+                  <td className="pr-1 pb-1">
+                    <AprieteSel value={row.al} onChange={v=>updArr('rect_rows',i,'al',v)} disabled={!puedeEditar} />
+                  </td>
                   <td className="pr-1 pb-1"><input type="number" className="border border-gray-300 rounded px-1.5 py-1 text-xs w-14 focus:outline-none" value={row.tl} onChange={e=>updArr('rect_rows',i,'tl',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
                   <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-12 focus:outline-none" value={row.el} onChange={e=>updArr('rect_rows',i,'el',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
                   <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">RECT.=</span><input className="border-0 bg-transparent text-xs w-10 focus:outline-none text-blue-900 font-medium" value={row.rect_izq||''} onChange={e=>updArr('rect_rows',i,'rect_izq',e.target.value)} onBlur={autoguardarBlur} placeholder="1-2" disabled={!puedeEditar} /></div></td>
                   <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">AMP=</span><input className="border-0 bg-transparent text-xs w-12 focus:outline-none text-blue-900 font-medium" value={row.amp_izq||''} onChange={e=>updArr('rect_rows',i,'amp_izq',e.target.value)} onBlur={autoguardarBlur} placeholder="2X40" disabled={!puedeEditar} /></div></td>
                   <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">RECT.=</span><input className="border-0 bg-transparent text-xs w-10 focus:outline-none text-blue-900 font-medium" value={row.rect_der||''} onChange={e=>updArr('rect_rows',i,'rect_der',e.target.value)} onBlur={autoguardarBlur} placeholder="3-4" disabled={!puedeEditar} /></div></td>
                   <td className="pr-1 pb-1"><div className="flex items-center gap-0.5 rounded px-1.5 py-1" style={{background:'#bae6fd'}}><span className="text-blue-800 font-bold text-xs whitespace-nowrap">AMP=</span><input className="border-0 bg-transparent text-xs w-12 focus:outline-none text-blue-900 font-medium" value={row.amp_der||''} onChange={e=>updArr('rect_rows',i,'amp_der',e.target.value)} onBlur={autoguardarBlur} placeholder="2X40" disabled={!puedeEditar} /></div></td>
-                  <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-16 focus:outline-none" value={row.ar} onChange={e=>updArr('rect_rows',i,'ar',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
+                  {/* Apr R — selector AWG */}
+                  <td className="pr-1 pb-1">
+                    <AprieteSel value={row.ar} onChange={v=>updArr('rect_rows',i,'ar',v)} disabled={!puedeEditar} />
+                  </td>
                   <td className="pr-1 pb-1"><input type="number" className="border border-gray-300 rounded px-1.5 py-1 text-xs w-14 focus:outline-none" value={row.tr} onChange={e=>updArr('rect_rows',i,'tr',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
                   <td className="pr-1 pb-1"><input className="border border-gray-300 rounded px-1.5 py-1 text-xs w-12 focus:outline-none" value={row.er} onChange={e=>updArr('rect_rows',i,'er',e.target.value)} onBlur={autoguardarBlur} disabled={!puedeEditar} /></td>
                   {puedeEditar && <td><button onClick={()=>delArr('rect_rows',i)} className="text-red-400 hover:text-red-600 px-1">×</button></td>}
